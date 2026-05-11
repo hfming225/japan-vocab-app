@@ -1,0 +1,33 @@
+name: Deploy Static Website to GitHub Pages
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ main ] # 當推送到 'main' 分支時觸發
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Checkout code (獲取程式碼)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      # 2. 檢查是否有需要部署的檔案 (確認 index.html 存在)
+      - name: Check for main page file
+        run: |
+          if [ ! -f ./index.html ]; then
+            echo "Error: index.html not found in the root directory."
+            exit 1
+          fi
+
+      # 3. (可選/模擬部署步驟)
+      # 對於純靜態網站，通常只需要確保代碼已推送。
+      # 如果需要複雜的編譯（例如使用 Webpack），可以在這裡加入 build step。
+      - name: Deployment Successful Confirmation
+        run: echo "Deployment artifact is ready in the root directory."
+
+      # 4. 實際的部署到 GitHub Pages 是由 Settings UI 控制的，但此步驟確保了代碼完整性檢查。
+      # 如果需要發佈 assets (如圖片或字體)，可以在這裡執行 rsync 或 copy 命令。
+
+  # 注意：您還需要在 GitHub 介面的 "Settings" -> "Pages" 中設定 Source Branch 為 main。
