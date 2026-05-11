@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日文單字看板</title>
+    <title>Japanese Vocabulary Board</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -11,7 +11,7 @@
         import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         const firebaseConfig = {
-            apiKey: "AIzaSyBxG7GluZr5vDipEuSP2WsLUiBDNYfImtc",
+            apiKey: "AIzaSy...Imtc",
             authDomain: "japan-word-923b2.firebaseapp.com",
             projectId: "japan-word-923b2",
             storageBucket: "japan-word-923b2.appspot.com",
@@ -23,14 +23,14 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // UI 邏輯與 Firebase 互動程式碼...
+        // UI logic and Firebase interaction code...
         console.log("App Initialized");
     </script>
 </head>
 <body class="bg-gray-100 p-4">
     <div id="app" class="max-w-4xl mx-auto">
-        <h1 class="text-2xl font-bold mb-4">日文單字看板</h1>
-        <!-- 看板 UI -->
+        <h1 class="text-2xl font-bold mb-4">Japanese Vocabulary Kanban Board</h1>
+        <!-- Kanban UI Area -->
     </div>
 </body>
 </html>
