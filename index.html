@@ -5,170 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌸 日文單字看板 App</title>
     <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'PingFang TC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
             background-color: #f4f7f9;
-            margin: 0;
             padding: 20px;
             min-height: 100vh;
-            box-sizing: border-box;
         }
-        *, *::before, *::after { box-sizing: border-box; }
-
-        /* 主容器：置中 */
         #app-wrapper {
-            max-width: 300px;
+            max-width: 1600px;
             margin: 0 auto;
         }
-
-        header { text-align: center; margin-bottom: 30px; }
-        h1 { color: #2c3e50; font-weight: 300; font-size: 1.8em; }
+        header { text-align: center; margin-bottom: 24px; }
+        h1 { font-weight: 300; font-size: 1.8em; color: #2c3e50; }
+        #add-vocab-btn {
+            margin-top: 16px;
+            padding: 10px 24px;
+            font-size: 1em;
+            background: #e67e22;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #add-vocab-btn:hover { background: #d35400; }
 
         #kanban-board {
             display: flex;
             gap: 16px;
-            padding: 10px 0;
-            min-height: 600px;
+            min-height: 560px;
             justify-content: center;
-            align-items: flex-start;
         }
         .kanban-column {
-            background-color: #ebecf0;
-            border-radius: 8px;
-            padding: 15px;
             flex: 0 0 calc((100% - 32px) / 3);
-            max-width: 400px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            max-width: 380px;
+            background: #ebecf0;
+            border-radius: 10px;
+            padding: 14px;
             display: flex;
             flex-direction: column;
-            transition: background-color 0.2s, border-color 0.2s;
+            transition: background 0.2s, border 0.2s;
         }
         .kanban-column h2 {
-            font-size: 1.2em;
-            margin-top: 0;
+            font-size: 1.15em;
             padding-bottom: 10px;
             border-bottom: 2px solid #dcdde1;
-            color: #2c3e50;
             text-align: center;
+            color: #2c3e50;
             flex-shrink: 0;
         }
         .card-container {
-            flex-grow: 1;
-            min-height: 50px;
+            flex: 1;
+            min-height: 40px;
             padding: 4px;
-            transition: background-color 0.2s;
+            transition: background 0.2s;
+            border-radius: 6px;
         }
 
+        /* 卡片 */
         .vocab-card {
-            background-color: white;
+            background: #fff;
             padding: 14px;
             margin-bottom: 10px;
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             cursor: grab;
-            transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s, border-left-color 0.15s, opacity 0.15s;
             border-left: 5px solid #3498db;
-            user-select: none;
+            transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s;
         }
-        .vocab-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
-
-        /* 不同狀態的底色 */
-        [data-status="learning"] { border-left-color: #3498db; background-color: #eaf6ff !important; }
-        [data-status="in_progress"] { border-left-color: #f39c12; background-color: #fffbf0 !important; }
-        [data-status="mastered"] { border-left-color: #2ecc71; background-color: #f0fff4 !important; }
-
-        /* 拖曳中卡片：變色 */
-        .vocab-card.is-dragging {
-            background-color: #fff3cd !important;
-            border-left-color: #e67e22 !important;
-            border: 2px dashed #e67e22;
-            opacity: 0.8;
-            transform: rotate(2deg) scale(0.95);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
-
-        .vocab-card .kanji {
-            font-size: 1.6em;
-            display: block;
-            margin-bottom: 4px;
-            color: #c0392b;
-        }
+        .vocab-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
+        .vocab-card .kanji { font-size: 1.5em; display: block; color: #c0392b; margin-bottom: 4px; }
         .vocab-card .reading,
-        .vocab-card .meaning {
-            font-size: 0.95em;
-            display: block;
-            margin-bottom: 4px;
-            color: #555;
+        .vocab-card .meaning { font-size: 0.92em; display: block; color: #555; margin-bottom: 3px; }
+        .vocab-card .actions {
+            margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;
+            display: flex; gap: 6px;
         }
-        .actions {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #eee;
-            display: flex;
-            gap: 6px;
+        .vocab-card .actions button {
+            flex: 1; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px;
+            cursor: pointer; font-size: 0.82em;
         }
-        .actions button {
-            flex: 1;
-            padding: 6px 8px;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.08);
-            border-radius: 4px;
-            font-size: 0.84em;
-            font-weight: bold;
-            transition: background-color 0.1s, color 0.1s;
-        }
-        .btn-review { background-color: #eaf6ff; color: #3498db; }
-        .btn-review:hover { background-color: #3498db; color: white; }
-        .btn-delete { background-color: #fdecea; color: #e74c3c; }
-        .btn-delete:hover { background-color: #e74c3c; color: white; }
+        .btn-review { background: #eaf6ff; color: #3498db; }
+        .btn-review:hover { background: #3498db; color: #fff; }
+        .btn-delete { background: #fdecea; color: #e74c3c; }
+        .btn-delete:hover { background: #e74c3c; color: #fff; }
 
-        /* 拖曳時看板邊框視覺 */
+        /* 不同狀態底色 */
+        .vocab-card[data-status="learning"] { border-left-color: #3498db !important; background: #eaf6ff !important; }
+        .vocab-card[data-status="in_progress"] { border-left-color: #f39c12 !important; background: #fffbf0 !important; }
+        .vocab-card[data-status="mastered"] { border-left-color: #2ecc71 !important; background: #f0fff4 !important; }
+
+        /* 狀態底色（通用） */
+        .vocab-card[data-status="learning"] { border-left-color: #3498db; background: #eaf6ff !important; }
+        .vocab-card[data-status="in_progress"] { border-left-color: #f39c12; background: #fffbf0 !important; }
+        .vocab-card[data-status="mastered"] { border-left-color: #2ecc71; background: #f0fff4 !important; }
+
+        /* 拖曳中 */
+        .vocab-card.is-dragging {
+            background: #ffeaa7 !important;
+            border-left-color: #fdcb6e !important;
+            border: 2px solid #fdcb6e;
+            opacity: 0.7;
+            cursor: grab;
+        }
+
+        /* 接管接受拖曳時 */
         .kanban-column.drag-over {
-            border: 2px dashed #3498db;
-            background-color: #eaf6ff;
+            border: 2px solid #3498db;
+            background: #eaf6ff;
         }
         .kanban-column.drag-over .card-container {
-            background-color: rgba(52,152,219,0.08);
+            background: rgba(52,152,219,0.08);
         }
 
         /* Modal */
         .modal {
             display: none;
-            position: fixed;
-            z-index: 100;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 28px;
-            border-radius: 10px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.3);
-            width: 340px;
-            max-width: 90%;
+            position: fixed; z-index: 999;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.45);
+            justify-content: center; align-items: center;
         }
-        .modal-content h3 { margin-top: 0; color: #2c3e50; }
-        .modal-content label { display: block; margin-top: 14px; margin-bottom: 4px; font-weight: bold; }
+        .modal-content {
+            background: #fff; padding: 28px 32px;
+            border-radius: 10px; width: 92%; max-width: 380px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-bottom: 18px; color: #2c3e50; }
+        .modal-content label { display: block; margin-top: 12px; font-weight: 600; font-size: 0.92em; }
         .modal-content input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #dcdde1;
-            border-radius: 4px;
-            box-sizing: border-box;
+            width: 100%; padding: 10px; margin-top: 4px;
+            border: 1px solid #ccc; border-radius: 6px; font-size: 1em;
         }
-        .modal-actions { margin-top: 22px; text-align: right; }
-        .modal-actions button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-weight: bold;
-            font-size: 0.95em;
+        .modal-content input:focus { border-color: #3498db; outline: none; }
+        .modal-btns { margin-top: 22px; text-align: right; }
+        .modal-btns button {
+            padding: 10px 22px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 0.95em;
         }
-        #submit-vocab { background-color: #3498db; color: white; }
-        #submit-vocab:hover { background-color: #2980b9; }
-        #cancel-vocab { background-color: #95a5a6; color: white; }
-        #cancel-vocab:hover { background-color: #7f8c8d; }
+        #btn-submit { background: #3498db; color: #fff; }
+        #btn-submit:hover { background: #2980b9; }
+        #btn-cancel { background: #bdc3c7; color: #fff; }
+        #btn-cancel:hover { background: #95a5a6; }
 
         @media (max-width: 900px) {
             #kanban-board { flex-direction: column; align-items: center; }
@@ -178,217 +156,235 @@
 </head>
 <body>
 
-    <div id="app-wrapper">
-        <header>
-            <h1>📚 日文單字看板 App</h1>
-        </header>
-
+<div id="app-wrapper">
+    <header>
+        <h1>🌸 日文單字看板</h1>
         <button id="add-vocab-btn">➕ 新增單字</button>
-
-        <div id="kanban-board">
-            <div class="kanban-column" data-status="learning">
-                <h2>🔰 學習中 (Learning)</h2>
-                <div class="card-container" data-status="learning"></div>
-            </div>
-
-            <div class="kanban-column" data-status="in_progress">
-                <h2>📖 進度檢核 (Review)</h2>
-                <div class="card-container" data-status="in_progress"></div>
-            </div>
-
-            <div class="kanban-column" data-status="mastered">
-                <h2>✅ 已掌握 (Mastered)</h2>
-                <div class="card-container" data-status="mastered"></div>
-            </div>
+    </header>
+    <div id="kanban-board">
+        <div class="kanban-column" data-status="learning">
+            <h2>🔰 學習中</h2>
+            <div class="card-container"></div>
+        </div>
+        <div class="kanban-column" data-status="in_progress">
+            <h2>📖 進度檢核</h2>
+            <div class="card-container"></div>
+        </div>
+        <div class="kanban-column" data-status="mastered">
+            <h2>✅ 已掌握</h2>
+            <div class="card-container"></div>
         </div>
     </div>
+</div>
 
-    <div id="addModal" class="modal">
-        <div class="modal-content">
-            <h3>新增單字</h3>
-            <label for="input-kanji">日文（漢字／假名）</label>
-            <input type="text" id="input-kanji" placeholder="例如：猫">
-            <label for="input-reading">發音（讀音）</label>
-            <input type="text" id="input-reading" placeholder="例如：ねこ">
-            <label for="input-meaning">中文意思</label>
-            <input type="text" id="input-meaning" placeholder="例如：貓">
-            <div class="modal-actions">
-                <button id="cancel-vocab">取消</button>
-                <button id="submit-vocab">新增</button>
-            </div>
+<div class="modal" id="addModal">
+    <div class="modal-content">
+        <h3>新增日文單字</h3>
+        <label for="f-kanji">日文</label>
+        <input type="text" id="f-kanji" placeholder="例：猫">
+        <label for="f-reading">發音</label>
+        <input type="text" id="f-reading" placeholder="例：ねこ">
+        <label for="f-meaning">中文意思</label>
+        <input type="text" id="f-meaning" placeholder="例：貓">
+        <div class="modal-btns">
+            <button id="btn-cancel">取消</button>
+            <button id="btn-submit">新增</button>
         </div>
     </div>
+</div>
 
-    <script>
-        // 資料層
-        const STORAGE_KEY = 'japanese_vocab_board';
+<script>
+(function() {
+    'use strict';
 
-        const defaultVocab = [
-            { id: '1', kanji: '猫', reading: 'ねこ', meaning: '貓', status: 'learning' },
-            { id: '2', kanji: '学校', reading: 'がっこう', meaning: '學校', status: 'in_progress' },
-            { id: '3', kanji: 'ありがとう', reading: '[詞組]', meaning: '謝謝你', status: 'mastered' }
-        ];
+    var STORAGE_KEY = 'japanese_vocab_board';
+    var DAILY_LIMIT = 10;
 
-        function loadVocab() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                try { return JSON.parse(raw); } catch (e) {}
-            }
-            return JSON.parse(JSON.stringify(defaultVocab));
+    var defaultVocab = [
+        { id: '1', kanji: '猫', reading: 'ねこ', meaning: '貓', status: 'learning' },
+        { id: '2', kanji: '学校', reading: 'がっこう', meaning: '學校', status: 'in_progress' },
+        { id: '3', kanji: 'ありがとう', reading: '[詞組]', meaning: '謝謝你', status: 'mastered' }
+    ];
+
+    // ── 資料 ──
+    function loadVocab() {
+        var raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            try { return JSON.parse(raw); } catch(e) {}
         }
+        return JSON.parse(JSON.stringify(defaultVocab));
+    }
 
-        function saveVocab(list) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    function saveVocab(list) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function spendDaily() {
+        var dateKey = 'japanese_vocab_date';
+        var remainKey = 'japanese_vocab_remain';
+        var today = new Date().toDateString();
+        var saved = localStorage.getItem(dateKey);
+        var remain = parseInt(localStorage.getItem(remainKey) || DAILY_LIMIT, 10);
+        if (saved !== today) {
+            localStorage.setItem(dateKey, today);
+            localStorage.setItem(remainKey, DAILY_LIMIT - 1);
+            return true;
         }
-
-        function genId() {
-            return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+        if (remain <= 0) {
+            alert('今日新增字數已達上限（' + DAILY_LIMIT + ' 個），明天再來吧！');
+            return false;
         }
+        localStorage.setItem(remainKey, remain - 1);
+        return true;
+    }
 
-        // ── 渲染 ──
-        function renderCards() {
-            const list = loadVocab();
-            document.querySelectorAll('.card-container').forEach(box => {
-                box.innerHTML = '';
-            });
-
-            list.forEach(word => {
-                const card = createCard(word);
-                const box = document.querySelector(`.card-container[data-status="${word.status}"]`);
-                if (box) box.appendChild(card);
-            });
-        }
-
-        function createCard(word) {
-            const div = document.createElement('div');
-            div.className = 'vocab-card';
-            div.draggable = true;
-            div.dataset.id = word.id;
-            div.dataset.status = word.status;
-
-            div.innerHTML =
-                '<span class="kanji">' + word.kanji + '</span>' +
-                '<span class="reading">' + (word.reading || '') + '</span>' +
-                '<span class="meaning">' + word.meaning + '</span>' +
-                '<div class="actions">' +
-                    '<button class="btn-review">複習</button>' +
-                    '<button class="btn-delete">刪除</button>' +
-                '</div>';
-
-            const btnReview = div.querySelector('.btn-review');
-            const btnDelete = div.querySelector('.btn-delete');
-
-            btnReview.onclick = function(e) {
-                e.stopPropagation();
-                handleReview(word.id);
-            };
-            btnDelete.onclick = function(e) {
-                e.stopPropagation();
-                if (confirm('確定要刪除嗎？')) {
-                    const list = loadVocab().filter(w => w.id !== word.id);
-                    saveVocab(list);
-                    renderCards();
-                }
-            };
-
-            // 拖曳事件
-            div.addEventListener('dragstart', (e) => {
-                draggedCard = div;
-                div.classList.add('is-dragging');
-            });
-            div.addEventListener('dragend', () => {
-                div.classList.remove('is-dragging');
-                draggedCard = null;
-            });
-
-            return div;
-        }
-
-        // ── 複習 ──
-        function handleReview(id) {
-            const list = loadVocab();
-            const word = list.find(w => w.id === id);
-            if (!word) return;
-            const flow = {
-                'learning': 'in_progress',
-                'in_progress': 'mastered',
-                'mastered': 'learning'
-            };
-            word.status = flow[word.status] || 'learning';
-            saveVocab(list);
-            renderCards();
-        }
-
-        // ── 拖曳 ──
-        let draggedCard = null;
-
-        function onDrop(e) {
-            e.preventDefault();
-            if (!draggedCard) return;
-            const box = e.currentTarget;
-            const col = box.closest('.kanban-column');
-            col.classList.remove('drag-over');
-            const newStatus = col.dataset.status;
-            const list = loadVocab();
-            const target = list.find(w => w.id === draggedCard.dataset.id);
-            if (target) {
-                target.status = newStatus;
-                saveVocab(list);
-            }
-            renderCards();
-        }
-
-        document.querySelectorAll('.card-container').forEach(box => {
-            const col = box.closest('.kanban-column');
-            box.addEventListener('dragover', e => {
-                e.preventDefault();
-                if (col) col.classList.add('drag-over');
-            });
-            box.addEventListener('dragleave', e => {
-                if (col) col.classList.remove('drag-over');
-            });
-            box.addEventListener('drop', onDrop);
+    // ── 渲染 ──
+    function renderCards() {
+        var list = loadVocab();
+        document.querySelectorAll('.card-container').forEach(function(box) {
+            box.innerHTML = '';
         });
+        list.forEach(function(word) {
+            var el = buildCard(word);
+            var box = document.querySelector('.card-container[data-status="' + word.status + '"]');
+            if (box) box.appendChild(el);
+        });
+    }
 
-        // ── Modal ──
-        const modal = document.getElementById('addModal');
-        document.getElementById('add-vocab-btn').onclick = function() {
-            modal.style.display = 'flex';
+    function buildCard(word) {
+        var div = document.createElement('div');
+        div.className = 'vocab-card';
+        div.draggable = true;
+        div.dataset.id = word.id;
+        div.dataset.status = word.status;
+
+        div.innerHTML =
+            '<span class="kanji">' + word.kanji + '</span>' +
+            '<span class="reading">' + (word.reading || '') + '</span>' +
+            '<span class="meaning">' + word.meaning + '</span>' +
+            '<div class="actions">' +
+                '<button class="btn-review">複習</button>' +
+                '<button class="btn-delete">刪除</button>' +
+            '</div>';
+
+        div.querySelector('.btn-review').onclick = function(e) {
+            e.stopPropagation();
+            handleReview(word.id);
         };
-        document.getElementById('cancel-vocab').onclick = function() {
-            modal.style.display = 'none';
-        };
-        document.getElementById('cancel-vocab').onclick = function() {
-            modal.style.display = 'none';
-        };
-        modal.onclick = function(e) {
-            if (e.target === modal) modal.style.display = 'none';
-        };
-        document.getElementById('submit-vocab').onclick = function() {
-            const kanji = document.getElementById('input-kanji').value.trim();
-            const reading = document.getElementById('input-reading').value.trim();
-            const meaning = document.getElementById('input-meaning').value.trim();
-            if (kanji && meaning) {
-                const list = loadVocab();
-                list.push({
-                    id: genId(),
-                    kanji: kanji,
-                    reading: reading || '',
-                    meaning: meaning,
-                    status: 'learning'
-                });
-                saveVocab(list);
-                modal.style.display = 'none';
-                document.getElementById('input-kanji').value = '';
-                document.getElementById('input-reading').value = '';
-                document.getElementById('input-meaning').value = '';
+        div.querySelector('.btn-delete').onclick = function(e) {
+            e.stopPropagation();
+            if (confirm('刪除這個單字？')) {
+                saveVocab(loadVocab().filter(function(w) { return w.id !== word.id; }));
                 renderCards();
             }
         };
 
-        window.onload = function() {
-            renderCards();
-        };
-    </script>
+        // 拖曳
+        div.addEventListener('dragstart', function(e) {
+            draggedCard = div;
+            div.classList.add('is-dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        div.addEventListener('dragend', function() {
+            div.classList.remove('is-dragging');
+            draggedCard = null;
+        });
+
+        return div;
+    }
+
+    // ── 複習 ──
+    function handleReview(id) {
+        var list = loadVocab();
+        var word = list.find(function(w) { return w.id === id; });
+        if (!word) return;
+        var map = { 'learning': 'in_progress', 'in_progress': 'mastered', 'mastered': 'learning' };
+        word.status = map[word.status] || 'learning';
+        saveVocab(list);
+        renderCards();
+    }
+
+    // ── 拖曳 ──
+    var draggedCard = null;
+
+    function onDrop(e) {
+        e.preventDefault();
+        if (!draggedCard) return;
+        var box = e.currentTarget;
+        var col = box.closest('.kanban-column');
+        col.classList.remove('drag-over');
+        var newStatus = col.dataset.status;
+        var list = loadVocab();
+        var target = list.find(function(w) { return w.id === draggedCard.dataset.id; });
+        if (target) {
+            target.status = newStatus;
+            saveVocab(list);
+        }
+        renderCards();
+    }
+
+    // 初始化看板容器事件
+    document.querySelectorAll('.card-container').forEach(function(box) {
+        box.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            var col = box.closest('.kanban-column');
+            if (col) col.classList.add('drag-over');
+        });
+        box.addEventListener('dragleave', function(e) {
+            var col = box.closest('.kanban-column');
+            if (col) col.classList.remove('drag-over');
+        });
+        box.addEventListener('drop', onDrop);
+    });
+
+    // ── Modal ──
+    var modalEl = document.getElementById('addModal');
+    var btnOpen = document.getElementById('add-vocab-btn');
+    var btnSubmit = document.getElementById('btn-submit');
+    var btnCancel = document.getElementById('btn-cancel');
+
+    btnOpen.onclick = function() {
+        modalEl.style.display = 'flex';
+        document.getElementById('f-kanji').focus();
+    };
+    btnCancel.onclick = function() {
+        modalEl.style.display = 'none';
+    };
+    modalEl.onclick = function(e) {
+        if (e.target === modalEl) modalEl.style.display = 'none';
+    };
+    btnSubmit.onclick = function() {
+        var kanji = document.getElementById('f-kanji').value.trim();
+        var reading = document.getElementById('f-reading').value.trim();
+        var meaning = document.getElementById('f-meaning').value.trim();
+        if (!kanji || !meaning) {
+            alert('請填寫日文與中文意思。');
+            return;
+        }
+        if (!spendDaily()) return;
+        var list = loadVocab();
+        list.push({
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+            kanji: kanji,
+            reading: reading || '（待補充）',
+            meaning: meaning,
+            status: 'learning'
+        });
+        saveVocab(list);
+        modalEl.style.display = 'none';
+        document.getElementById('f-kanji').value = '';
+        document.getElementById('f-reading').value = '';
+        document.getElementById('f-meaning').value = '';
+        renderCards();
+    };
+    // Enter 鍵提交
+    document.getElementById('f-meaning').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') btnSubmit.click();
+    });
+
+    // ── 啟動 ──
+    renderCards();
+})();
+</script>
 </body>
 </html>
