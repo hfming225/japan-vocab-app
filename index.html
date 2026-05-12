@@ -18,10 +18,9 @@
 
         /* --- 新增：主容器，用於居對齊 --- */
         #app-wrapper {
-            max-width: 1600px; /* 寬螢幕可展開，但不至於過寬 */
+            max-width: 1600px; /* 寬螢幕展開 */
             margin: 0 auto;    /* 置中 */
-            width: 100%;
-            box-sizing: border-box;
+            width: 90%;        /* 保持左右留白，避免貼邊 */
         }
 
         header {
@@ -38,8 +37,9 @@
             display: flex;
             gap: 20px;
             padding: 10px 0;
+            min-height: 600px; 
+            justify-content: center; /* 讓看板區間本身置中 */
             overflow-x: auto;
-            min-height: 600px; /* 確保看板有一定高度 */
             align-items: flex-start;
         }
 
@@ -50,7 +50,7 @@
             padding: 15px;
             flex: 1 1 30%; /* 讓三列平分空間 */
             min-width: 280px;
-            max-width: 350px;
+            max-width: 400px; /* 限制最大寬度 */
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             display: flex;
             flex-direction: column;
@@ -78,7 +78,7 @@
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             cursor: grab;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s, background-color 0.2s;
             border-left: 5px solid #3498db;
         }
 
@@ -87,20 +87,32 @@
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
         }
 
+        /* 視覺回饋：卡片正在被拖動時 */
+        .vocab-card.dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
         .vocab-card.mastered {
             border-left-color: #2ecc71;
-            background-color: #f0fff4;
+            background-color: #f0fff4; /* 背景微綠 */
         }
         .vocab-card.in_progress {
             border-left-color: #f39c12;
-            background-color: #fffbf0;
+            background-color: #fffbf0; /* 背景微黃 */
+        }
+
+        .vocab-card.learning {
+            border-left-color: #3498db;
+            background-color: #eaf6ff; /* 背景微藍 */
         }
 
         .vocab-card .kanji {
             font-size: 1.6em;
             display: block;
             margin-bottom: 5px;
-            color: #c0392b;
+            color: #2c3e50; /* 改深，比較好讀 */
         }
 
         .vocab-card .reading, .vocab-card .meaning {
@@ -113,7 +125,7 @@
         .actions {
             margin-top: 10px;
             padding-top: 10px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid #eee; /* 增加分隔線 */
             display: flex;
             justify-content: space-between;
         }
@@ -133,11 +145,12 @@
 
         /* --- 拖曳視覺回饋 --- */
         .kanban-column.drag-over .card-container {
-            background-color: rgba(52, 152, 219, 0.05);
+            background-color: rgba(52, 152, 219, 0.1);
             border-radius: 4px;
         }
         .kanban-column.drag-over {
             border: 2px dashed #3498db;
+            transform: scale(1.02); /* 輕微放大看板 */
         }
 
         /* --- 新增單字彈出視窗 (Modal) --- */
@@ -321,9 +334,10 @@
             // 綁定拖放事件
             div.addEventListener('dragstart', (e) => {
                 draggedCard = e.target;
-                setTimeout(() => draggedCard.style.opacity = '0.5', 0);
+                draggedCard.classList.add('dragging'); // 加上拖曳中樣式
             });
             div.addEventListener('dragend', () => {
+                draggedCard.classList.remove('dragging'); // 移除拖曳樣式
                 draggedCard.style.opacity = '1';
                 draggedCard = null;
             });
@@ -350,16 +364,16 @@
             if (targetWord) {
                 targetWord.status = newStatus;
                 saveVocab(newVocabList);
-                draggedCard.dataset.status = newStatus;
             }
 
-            targetContainer.appendChild(draggedCard);
+            // 修正：每次拖放完成後重繪，確保卡片樣式（顏色）正確對應
+            renderCards(); 
         }
 
         // --- 修正後的複習邏輯 ---
         function handleReview(event, id) {
             event.stopPropagation();
-            // 這裡必須重新載入清單，確保拿到最新狀態
+             // 修正：確保每次都能拿到最新的資料
             const vocabList = loadVocab(); 
             const word = vocabList.find(w => w.id === id);
             
@@ -367,7 +381,7 @@
                 const flow = {'learning': 'in_progress', 'in_progress': 'mastered', 'mastered': 'learning'};
                 word.status = flow[word.status] || 'learning';
                 
-                saveVocab(vocabList); // 修正：使用正確的變數名 'vocabList'
+                saveVocab(vocabList); // 使用正確變數名 'vocabList'
                 renderCards(); // 更新畫面
                 alert(`✅ 單字狀態已更變為：${word.status}`);
             }
