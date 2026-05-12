@@ -52,6 +52,7 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
+            transition: background-color 0.2s, border-color 0.2s;
         }
 
         .kanban-column h2 {
@@ -79,7 +80,7 @@
             border-radius: 6px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             cursor: grab;
-            transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s, border-color 0.15s, opacity 0.15s;
+            transition: transform 0.15s, box-shadow 0.15s, background-color 0.15s, border-left-color 0.15s;
             border-left: 5px solid #3498db;
             user-select: none;
         }
@@ -105,10 +106,9 @@
 
         /* 拖曳中卡片：變色 */
         .vocab-card.is-dragging {
-            background-color: #fff3cd;
-            border-left-color: #e67e22;
-            border: 2px dashed #e67e22;
-            opacity: 0.7;
+            background-color: #fff3cd; /* 黃底 */
+            border-left-color: #e67e22; /* 橘框 */
+            opacity: 0.8;
             transform: rotate(2deg) scale(0.95);
             box-shadow: 0 8px 20px rgba(0,0,0,0.25);
         }
@@ -315,9 +315,19 @@
         function makeCard(word) {
             var div = document.createElement('div');
             div.className = 'vocab-card';
-            div.draggable = true;
+            div.draggable = 'true';
             div.dataset.id = word.id;
             div.dataset.status = word.status;
+
+            // 修正：確保卡片渲染時帶有正確的狀態底色
+            var statusColors = {
+                'learning': { border: '#3498db', bg: '#eaf6ff' },
+                'in_progress': { border: '#f39c12', bg: '#fffbf0' },
+                'mastered': { border: '#2ecc71', bg: '#f0fff4' }
+            };
+            var colors = statusColors[word.status] || statusColors['learning'];
+            div.style.borderLeftColor = colors.border;
+            div.style.backgroundColor = colors.bg;
 
             div.innerHTML =
                 '<span class="kanji">' + word.kanji + '</span>' +
@@ -348,7 +358,7 @@
             div.addEventListener('dragstart', function(e) {
                 draggedCard = div;
                 div.classList.add('is-dragging');
-                // 讓拖曳時的影子跟隨滑鼠
+                // 拖曳時底色變黃，邊框變橘
                 e.dataTransfer.effectAllowed = 'move';
             });
             div.addEventListener('dragend', function() {
@@ -359,7 +369,7 @@
             return div;
         }
 
-        /* ── 拖曳 ── */
+        /* ── 拖曳邏輯 ── */
         var draggedCard = null;
 
         function handleDrop(event) {
@@ -377,7 +387,6 @@
                 saveVocab(list);
             }
 
-            // 重新渲染
             renderCards();
         }
 
@@ -398,7 +407,67 @@
                 handleDrop(e);
             });
         });
-    });
+
+        /* ── 新增單字 Modal 互動 (修復部分) ── */
+        var modal = document.getElementById('addModal');
+        var addVocabBtn = document.getElementById('add-vocab-btn');
+        var cancelVocabBtn = document.getElementById('cancel-vocab');
+        var submitVocabBtn = document.getElementById('submit-vocab');
+
+        // 點擊新增按鈕
+        if (addVocabBtn) {
+            addVocabBtn.onclick = function() {
+                modal.style.display = 'flex';
+            };
+        }
+        
+        // 點擊取消按鈕
+        if (cancelVocabBtn) {
+            cancelVocabBtn.onclick = function() {
+                modal.style.display = 'none';
+            };
+        }
+
+        // 點擊提交按鈕
+        if (submitVocabBtn) {
+            submitVocabBtn.onclick = function() {
+                var kanji = document.getElementById('input-kanji').value.trim();
+                var reading = document.getElementById('input-reading').value.trim();
+                var meaning = document.getElementById('input-meaning').value.trim();
+
+                if (kanji && meaning) {
+                    var newWord = {
+                        id: genId(),
+                        kanji: kanji,
+                        reading: reading || '（待補充）',
+                        meaning: meaning,
+                        status: 'learning'
+                    };
+                    var list = loadVocab();
+                    list.push(newWord);
+                    saveVocab(list);
+                    renderCards();
+                    
+                    modal.style.display = 'none';
+                    
+                    // 清空輸入框
+                    document.getElementById('input-kanji').value = '';
+                    document.getElementById('input-reading').value = '';
+                    document.getElementById('input-meaning').value = '';
+                } else {
+                    alert('請填寫日文與中文意思。');
+                }
+            };
+        }
+
+        // 點擊遮罩層關閉 Modal
+        if (modal) {
+             modal.onclick = function(e) {
+                 if (e.target === modal) modal.style.display = 'none';
+             };
+        }
+
+    })();
     </script>
 </body>
 </html>
