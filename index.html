@@ -246,7 +246,7 @@
         });
         list.forEach(function(word) {
             var el = buildCard(word);
-            var box = document.querySelector('.card-container[data-status="' + word.status + '"]');
+            var box = document.querySelector('.kanban-column[data-status="' + word.status + '"] .card-container');
             if (box) box.appendChild(el);
         });
     }
@@ -353,15 +353,40 @@
     modalEl.onclick = function(e) {
         if (e.target === modalEl) modalEl.style.display = 'none';
     };
-    btnSubmit.onclick = function() {
-        var kanji = document.getElementById('f-kanji').value.trim();
-        var reading = document.getElementById('f-reading').value.trim();
-        var meaning = document.getElementById('f-meaning').value.trim();
-        if (!kanji || !meaning) {
-            alert('請填寫日文與中文意思。');
+    btnSubmit.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('[新增單字] btnSubmit clicked!');
+        
+        var kanjiEl = document.getElementById('f-kanji');
+        var readingEl = document.getElementById('f-reading');
+        var meaningEl = document.getElementById('f-meaning');
+        
+        console.log('[新增單字] kanjiEl:', kanjiEl);
+        console.log('[新增單字] f-kanji value:', kanjiEl ? kanjiEl.value : 'EL NOT FOUND');
+        console.log('[新增單字] f-meaning value:', meaningEl ? meaningEl.value : 'EL NOT FOUND');
+        
+        var kanji = kanjiEl ? kanjiEl.value.trim() : '';
+        var reading = readingEl ? readingEl.value.trim() : '';
+        var meaning = meaningEl ? meaningEl.value.trim() : '';
+        
+        console.log('[新增單字] trimmed values -> kanji:', kanji, 'meaning:', meaning);
+        
+        if (!kanji) {
+            alert('請填寫日文欄位！');
             return;
         }
-        if (!spendDaily()) return;
+        if (!meaning) {
+            alert('請填寫中文意思！');
+            return;
+        }
+        
+        if (!spendDaily()) {
+            console.log('[新增單字] Daily limit reached');
+            return;
+        }
+        
+        console.log('[新增單字] Adding word to data...');
         var list = loadVocab();
         list.push({
             id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -370,13 +395,18 @@
             meaning: meaning,
             status: 'learning'
         });
+        console.log('[新增單字] list now has', list.length, 'words');
         saveVocab(list);
+        console.log('[新增單字] saved to localStorage');
+        
         modalEl.style.display = 'none';
-        document.getElementById('f-kanji').value = '';
-        document.getElementById('f-reading').value = '';
-        document.getElementById('f-meaning').value = '';
+        kanjiEl.value = '';
+        readingEl.value = '';
+        meaningEl.value = '';
         renderCards();
-    };
+        console.log('[新增單字] Done! renderCards called');
+        alert('已新增：' + kanji + ' - ' + meaning);
+    });
     // Enter 鍵提交
     document.getElementById('f-meaning').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') btnSubmit.click();
