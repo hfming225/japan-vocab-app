@@ -1,138 +1,337 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Japanese Word Learner</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+    <title>🌸 日文單字看板學習 App (Kanban)</title>
+    <style>
+        /* --- 全局基礎樣式 --- */
+        body {
+            font-family: 'PingFang TC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+        }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBxG7GluZr5vDipEuSP2WsLUiBDNYfImtc",
-            authDomain: "japan-word-923b2.firebaseapp.com",
-            projectId: "japan-word-923b2",
-            storageBucket: "japan-word-923b2.firebasestorage.app",
-            messagingSenderId: "415963978132",
-            appId: "1:415963978132:web:0fe0aaa853a4b6e8691781"
-        };
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-weight: 300;
+        }
+        #vocab-counter {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 20px;
+            font-size: 1.2em;
+        }
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        /* --- Kanban Board 容器 --- */
+        #kanban-board {
+            display: flex;
+            gap: 20px;
+            padding: 10px 0;
+            overflow-x: auto; /* 允許橫向滾動，適應多個看板 */
+            min-height: calc(100vh - 150px); /* 確保高度足夠大 */
+        }
 
-        // UI State
-        let currentUser = null;
-        const loginBtn = document.getElementById('login-btn');
-        const logoutBtn = document.getElementById('logout-btn');
-        const kanbanBoard = document.getElementById('kanban-board');
-        const addWordForm = document.getElementById('add-word-form');
+        /* --- 單個 Kanban 列 (Column) --- */
+        .kanban-column {
+            background-color: #ebecf0;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 0 0 300px; /* 固定寬度，確保各列不會太擠 */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
 
-        onAuthStateChanged(auth, (user) => {
-            currentUser = user;
-            if (user) {
-                loginBtn.classList.add('hidden');
-                logoutBtn.classList.remove('hidden');
-                loadWords();
-            } else {
-                loginBtn.classList.remove('hidden');
-                logoutBtn.classList.add('hidden');
-                kanbanBoard.innerHTML = '<p class="text-center p-4">Please log in to start learning.</p>';
+        .kanban-column h2 {
+            font-size: 1.3em;
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #bdc3c7;
+            color: #2c3e50;
+        }
+
+        /* --- 單張字彙卡片 (Card) --- */
+        .vocab-card {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            cursor: grab; /* 提示可拖動 */
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 5px solid #3498db;
+        }
+
+        .vocab-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 拖拉重覆狀態視覺回饋 */
+        .kanban-column.drag-over {
+            background-color: #d3e2f0; /* 淺藍色底層 */
+            border: 2px dashed #3498db;
+        }
+
+        /* 卡片內部元素樣式 */
+        .vocab-card .kanji {
+            font-size: 1.8em;
+            display: block;
+            margin-bottom: 5px;
+            color: #c0392b; /* 強調日文漢字顏色 */
+        }
+
+        .vocab-card .reading, .vocab-card .meaning {
+            font-size: 1em;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        /* 卡片底部操作按鈕 (例如：記憶/複習) */
+        .actions button {
+            background-color: #2ecc71;
+            border: none;
+            padding: 8px 12px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 0.9em;
+            transition: background-color 0.1s;
+        }
+        .actions button:hover {
+            background-color: #27ae60;
+        }
+
+        /* --- 新增單字按鈕 --- */
+        #add-vocab-btn {
+            padding: 10px 25px;
+            font-size: 1em;
+            background-color: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 1000px) {
+            #kanban-board {
+                flex-direction: column; /* 較小的螢幕堆疊，取代水平滾動 */
+                align-items: center;
+            }
+            .kanban-column {
+                flex: 1 1 90%; /* 讓各列佔用更多寬度 */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>📚 日文單字看板學習 App</h1>
+        <p class="sub-text">（基於 Kanban 思維設計，拖動卡片改變學習狀態）</p>
+        <!-- 每日限制計數器 -->
+        <div>今日學字剩餘：<span id="vocab-counter">10</span> 個</div>
+    </header>
+
+    <button id="add-vocab-btn">➕ 新增單字卡片</button>
+
+    <div id="kanban-board">
+        <!-- 待學 (Learning) 看板 -->
+        <div class="kanban-column" data-status="learning">
+            <h2>🔰 學習中 / 待複習 (Learning)</h2>
+            <div class="card-container" ondragover="dragOver(event)">
+                <!-- 這裡將會動態生成卡片 -->
+                <div class="vocab-card" draggable="true" data-id="1" data-status="learning">
+                    <span class="kanji">猫</span>
+                    <span class="reading">ねこ (neko)</span>
+                    <span class="meaning">貓</span>
+                    <div class="actions">
+                        <button onclick="handleReview(event, 'in_progress')">複習中</button>
+                    </div>
+                </div>
+                 <!-- 更多待學卡片... -->
+            </div>
+        </div>
+
+        <!-- 學習進度 (In Progress) 看板 -->
+        <div class="kanban-column" data-status="in_progress">
+            <h2>📖 進度檢核 (Review)</h2>
+             <div class="card-container" ondragover="dragOver(event)">
+                <div class="vocab-card" draggable="true" data-id="2" data-status="in_progress">
+                    <span class="kanji">学校</span>
+                    <span class="reading">がっこう (gakkō)</span>
+                    <span class="meaning">學校</span>
+                    <div class="actions">
+                        <button onclick="handleReview(event, 'learning')">狀態不記</button>
+                        <button onclick="handleReview(event, 'mastered')">已掌握</button>
+                    </div>
+                </div>
+                 <!-- 更多進度卡片... -->
+            </div>
+        </div>
+
+        <!-- 已掌握 (Mastered) 看板 -->
+        <div class="kanban-column" data-status="mastered">
+            <h2>✅ 已掌握 (Mastered)</h2>
+             <div class="card-container" ondragover="dragOver(event)">
+                <div class="vocab-card" draggable="true" data-id="3" data-status="mastered">
+                    <span class="kanji">ありがとう</span>
+                    <span class="reading">[phrase]</span>
+                    <span class="meaning">謝謝你</span>
+                     <div class="actions">
+                        <!-- 已掌握卡片通常沒有操作按鈕，或只放複習按鈕 -->
+                    </div>
+                </div>
+                 <!-- 更多已掌握卡片... -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // =========================================
+        // JS 邏輯核心：實現 Kanban 和拖放 (Drag and Drop)
+        // =========================================
+
+        const cardContainers = document.querySelectorAll('.card-container');
+        let draggedCard = null; // 用於追蹤目前被拖曳的卡片元素
+
+        // --- 1. 拖曳事件處理器 ---
+
+        document.addEventListener('dragstart', (e) => {
+            if (e.target.classList.contains('vocab-card')) {
+                draggedCard = e.target;
+                e.dataTransfer.setData('text/plain', draggedCard.dataset.id); // 傳遞卡片 ID
+                // 添加一個 class 來視覺化拖曳狀態
+                setTimeout(() => {
+                    draggedCard.style.opacity = '0.5';
+                }, 0);
             }
         });
 
-        loginBtn.onclick = () => signInWithPopup(auth, new GoogleAuthProvider());
-        logoutBtn.onclick = () => signOut(auth);
-
-        async function loadWords() {
-            const q = query(collection(db, "words"), where("uid", "==", currentUser.uid));
-            const snapshot = await getDocs(q);
-            const words = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            renderKanban(words);
-        }
-
-        function renderKanban(words) {
-            const learning = words.filter(w => !w.learned);
-            const learned = words.filter(w => w.learned);
-            
-            document.getElementById('learning-col').innerHTML = learning.map(w => wordCard(w)).join('');
-            document.getElementById('learned-col').innerHTML = learned.map(w => wordCard(w)).join('');
-        }
-
-        function wordCard(word) {
-            return `
-                <div class="bg-white p-3 mb-2 rounded shadow text-sm border-l-4 ${word.learned ? 'border-green-500' : 'border-blue-500'}">
-                    <div class="flex justify-between">
-                        <h4 class="font-bold text-lg">${word.kanji}</h4>
-                        <button onclick="speak('${word.kanji}')" class="text-blue-500">🔊</button>
-                    </div>
-                    <p class="text-gray-600">${word.meaning}</p>
-                    ${!word.learned ? `<button onclick="markLearned('${word.id}')" class="mt-2 text-xs text-green-600 font-bold">Done ✅</button>` : ''}
-                </div>
-            `;
-        }
-
-        window.speak = (text) => {
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'ja-JP';
-            window.speechSynthesis.speak(msg);
-        };
-
-        window.markLearned = async (id) => {
-            await updateDoc(doc(db, "words", id), { learned: true });
-            loadWords();
-        };
-
-        addWordForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const today = new Date().toISOString().split('T')[0];
-            const q = query(collection(db, "words"), where("uid", "==", currentUser.uid), where("date", "==", today));
-            const count = (await getDocs(q)).size;
-
-            if (count >= 10) {
-                alert("Daily limit of 10 words reached!");
-                return;
+        document.addEventListener('dragend', (e) => {
+            if (draggedCard) {
+                draggedCard.style.opacity = '1'; // 重設透明度
+                draggedCard = null;
             }
+        });
 
-            await addDoc(collection(db, "words"), {
-                uid: currentUser.uid,
-                kanji: e.target.kanji.value,
-                meaning: e.target.meaning.value,
-                learned: false,
-                date: today,
-                createdAt: serverTimestamp()
+        // 告訴目標區域可以接受拖曳的元素
+        function dragOver(event) {
+            event.preventDefault(); 
+            const column = event.currentTarget.closest('.kanban-column');
+            if (column) {
+                column.classList.add('drag-over');
+            }
+        }
+
+        // 當拖曳離開目標區域時移除視覺回饋
+        function dragLeave(event) {
+             const column = event.currentTarget.closest('.kanban-column');
+             if (column) {
+                 column.classList.remove('drag-over');
+             }
+        }
+
+        // 執行放置邏輯
+        document.addEventListener('dragover', (e) => e.preventDefault()); // 必須阻止預設行為才能觸發 ondragover
+        document.addEventListener('dragleave', dragLeave);
+        document.querySelectorAll('.card-container').forEach(container => {
+            // 為容器添加 dragleave 事件監聽器，確保視覺回饋能移除
+             container.addEventListener('dragleave', dragLeave);
+        });
+
+
+        function handleDrop(event) {
+            event.preventDefault();
+            const targetColumn = event.currentTarget.closest('.kanban-column');
+            if (!targetColumn) return;
+
+            // 1. 清除拖曳視覺回饋
+             targetColumn.querySelector('.card-container').classList.remove('drag-over');
+
+            // 2. 找到目標狀態 (data-status) 和卡片 ID
+            const newStatus = targetColumn.dataset.status;
+            if (!draggedCard) return;
+            const cardId = draggedCard.dataset.id;
+
+            // 3. 更新卡片在 DOM 中的位置和屬性
+            const container = targetColumn.querySelector('.card-container');
+            if (container && !container.contains(draggedCard)) {
+                container.appendChild(draggedCard); // 將卡片移動到新容器的末尾
+            }
+            
+            // 4. 更新狀態數據屬性（模擬資料庫更新）
+            draggedCard.dataset.status = newStatus;
+
+            console.log(`[SUCCESS] Card ${cardId} moved from status '${draggedCard.dataset.status}' to '${newStatus}'.`);
+            
+            // 在實際應用中，這裡會發起 API call 到 Firebase / Backend
+        }
+
+
+        // --- 2. 模擬功能函數 (狀態按鈕點擊) ---
+
+        /**
+         * 當使用者點擊卡片底部的狀態轉換按鈕時調用。
+         * @param {Event} event - 事件對象，用於防止事件冒泡到整個看板板。
+         * @param {string} newStatus - 目標的新狀態 ('learning', 'in_progress', 'mastered')
+         */
+        function handleReview(event, newStatus) {
+            // 阻止點擊按鈕觸發的任何父層拖放事件或行為
+            event.stopPropagation(); 
+
+            const card = event.target.closest('.vocab-card');
+            if (!card) return;
+
+            const oldStatus = card.dataset.status;
+
+            // 模擬邏輯：狀態改變，視為成功處理一次複習。
+            console.log(`[REVIEW] Card ${card.dataset.id} status changed from '${oldStatus}' to '${newStatus}'.`);
+            
+             // --- DOM 更新: 強制執行拖放行為 ---
+            const targetColumn = document.querySelector(`.kanban-column[data-status="${newStatus}"]`);
+            if (targetColumn) {
+                // 觸發模擬的 drop 事件，讓 UI 跟上數據邏輯
+                 // 注意：在真實場景中，我們應該直接操作 DOM，而不是模擬事件。
+                 const container = targetColumn.querySelector('.card-container');
+                 container.appendChild(card);
+                 card.dataset.status = newStatus;
+
+                 alert(`✅ 單字卡片 ${card.dataset.id} 已成功轉移至 [${newStatus}] 看板！`);
+            } else {
+                alert(`❌ 找不到狀態為 [${newStatus}] 的看板，無法移動。`);
+            }
+        }
+
+
+        // --- 3. 初始化事件監聽器和數據綁定 ---
+
+        function initKanban() {
+            // 為所有卡片容器添加拖放目標點擊事件
+            document.querySelectorAll('.card-container').forEach(container => {
+                container.addEventListener('dragover', dragOver);
+                container.addEventListener('dragleave', dragLeave);
+                container.addEventListener('drop', handleDrop);
             });
-            e.target.reset();
-            loadWords();
-        };
+
+            // 初始化字彙計數器和每日限制邏輯
+             document.getElementById('vocab-counter').textContent = '10';
+
+             console.log("✅ Kanban 核心邏輯已初始化完成。");
+        }
+
+        // 在頁面載入時執行初始化
+        window.onload = initKanban;
+
     </script>
-</head>
-<body class="bg-gray-100 p-4">
-    <header class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold">Japanese Learner</h1>
-        <div>
-            <button id="login-btn" class="bg-blue-500 text-white px-4 py-2 rounded">Login</button>
-            <button id="logout-btn" class="hidden bg-red-500 text-white px-4 py-2 rounded">Logout</button>
-        </div>
-    </header>
-
-    <form id="add-word-form" class="bg-white p-4 rounded shadow mb-6 flex gap-2">
-        <input name="kanji" placeholder="Kanji" class="border p-2 flex-grow" required>
-        <input name="meaning" placeholder="Meaning" class="border p-2 flex-grow" required>
-        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded">Add</button>
-    </form>
-
-    <div id="kanban-board" class="grid grid-cols-2 gap-4">
-        <div>
-            <h2 class="font-bold text-center mb-2">Learning</h2>
-            <div id="learning-col"></div>
-        </div>
-        <div>
-            <h2 class="font-bold text-center mb-2">Learned</h2>
-            <div id="learned-col"></div>
-        </div>
-    </div>
 </body>
 </html>
