@@ -474,7 +474,7 @@
         var cards = document.querySelectorAll('.card-container');
         cards.forEach(function(box) { box.innerHTML = ''; box.innerHTML = '<div class="loading-overlay"><div class="loading-spinner"></div><p>同步中...</p></div>'; });
 
-        vocabCollection.orderBy('createdAt', 'asc')
+        vocabCollection
             .onSnapshot(function(snapshot) {
                 cards.forEach(function(box) { box.innerHTML = ''; });
 
@@ -544,37 +544,21 @@
 
     // ── 新增單字（寫入 Firestore） ──
     function addWord(kanji, reading, meaning) {
-        var uid = currentUser.uid;
         todayStr = new Date().toISOString().split('T')[0];
 
-        // 檢查每日限制
-        dailyDoc.get().then(function(doc) {
-            if (doc.exists) {
-                var count = doc.data().count || 0;
-                if (count >= DAILY_LIMIT) {
-                    alert('今日新增字數已達上限（' + DAILY_LIMIT + ' 個），明天再來吧！');
-                    return;
-                }
-                // 增加計數
-                dailyDoc.update({ count: firebase.firestore.FieldValue.increment(1) });
-            } else {
-                dailyDoc.set({ count: 1, date: todayStr });
-            }
-
-            // 寫入單字
-            vocabCollection.add({
-                kanji: kanji,
-                reading: reading,
-                meaning: meaning,
-                status: 'learning',
-                createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            }).then(function() {
-                console.log('單字已同步至 Firestore');
-            }).catch(function(err) {
-                showAuthError('新增失敗：' + err.message);
-            });
+        // 寫入單字
+        vocabCollection.add({
+            kanji: kanji,
+            reading: reading,
+            meaning: meaning,
+            status: 'learning',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            // 同時更新計數 (merge: true 確保若無此日記錄也會建立)
+            dailyDoc.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
+            console.log('單字已同步至 Firestore');
         }).catch(function(err) {
-            showAuthError('讀取進度失敗：' + err.message);
+            showAuthError('新增失敗：' + err.message);
         });
     }
 
@@ -601,7 +585,8 @@
     }
 
     // ── 使用者資料 ──
-    var userData = null; // 用於即時同步
+    var userData = null;
+    var todayStr; // 用於即時同步
 
     // ── 拖曳 ──
     var draggedCard = null;
