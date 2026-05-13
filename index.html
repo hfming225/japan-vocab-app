@@ -1,420 +1,214 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌸 日文單字看板 App</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'PingFang TC', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            background-color: #f4f7f9;
-            padding: 20px;
-            min-height: 100vh;
-        }
-        #app-wrapper {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-        header { text-align: center; margin-bottom: 24px; }
-        h1 { font-weight: 300; font-size: 1.8em; color: #2c3e50; }
-        #add-vocab-btn {
-            margin-top: 16px;
-            padding: 10px 24px;
-            font-size: 1em;
-            background: #e67e22;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        #add-vocab-btn:hover { background: #d35400; }
+    <title>Japanese Vocabulary Kanban</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs, updateDoc, doc, deleteDoc, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        #kanban-board {
-            display: flex;
-            gap: 16px;
-            min-height: 560px;
-            justify-content: center;
-        }
-        .kanban-column {
-            flex: 0 0 calc((100% - 32px) / 3);
-            max-width: 380px;
-            background: #ebecf0;
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            transition: background 0.2s, border 0.2s;
-        }
-        .kanban-column h2 {
-            font-size: 1.15em;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #dcdde1;
-            text-align: center;
-            color: #2c3e50;
-            flex-shrink: 0;
-        }
-        .card-container {
-            flex: 1;
-            min-height: 40px;
-            padding: 4px;
-            transition: background 0.2s;
-            border-radius: 6px;
-        }
-
-        /* 卡片 */
-        .vocab-card {
-            background: #fff;
-            padding: 14px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            cursor: grab;
-            border-left: 5px solid #3498db;
-            transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s;
-        }
-        .vocab-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-        .vocab-card .kanji { font-size: 1.5em; display: block; color: #c0392b; margin-bottom: 4px; }
-        .vocab-card .reading,
-        .vocab-card .meaning { font-size: 0.92em; display: block; color: #555; margin-bottom: 3px; }
-        .vocab-card .actions {
-            margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;
-            display: flex; gap: 6px;
-        }
-        .vocab-card .actions button {
-            flex: 1; padding: 5px 8px; border: 1px solid #ddd; border-radius: 4px;
-            cursor: pointer; font-size: 0.82em;
-        }
-        .btn-review { background: #eaf6ff; color: #3498db; }
-        .btn-review:hover { background: #3498db; color: #fff; }
-        .btn-delete { background: #fdecea; color: #e74c3c; }
-        .btn-delete:hover { background: #e74c3c; color: #fff; }
-
-        /* 不同狀態底色 */
-        .vocab-card[data-status="learning"] { border-left-color: #3498db !important; background: #eaf6ff !important; }
-        .vocab-card[data-status="in_progress"] { border-left-color: #f39c12 !important; background: #fffbf0 !important; }
-        .vocab-card[data-status="mastered"] { border-left-color: #2ecc71 !important; background: #f0fff4 !important; }
-
-        /* 狀態底色（通用） */
-        .vocab-card[data-status="learning"] { border-left-color: #3498db; background: #eaf6ff !important; }
-        .vocab-card[data-status="in_progress"] { border-left-color: #f39c12; background: #fffbf0 !important; }
-        .vocab-card[data-status="mastered"] { border-left-color: #2ecc71; background: #f0fff4 !important; }
-
-        /* 拖曳中 */
-        .vocab-card.is-dragging {
-            background: #ffeaa7 !important;
-            border-left-color: #fdcb6e !important;
-            border: 2px solid #fdcb6e;
-            opacity: 0.7;
-            cursor: grab;
-        }
-
-        /* 接管接受拖曳時 */
-        .kanban-column.drag-over {
-            border: 2px solid #3498db;
-            background: #eaf6ff;
-        }
-        .kanban-column.drag-over .card-container {
-            background: rgba(52,152,219,0.08);
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed; z-index: 999;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.45);
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: #fff; padding: 28px 32px;
-            border-radius: 10px; width: 92%; max-width: 380px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-        }
-        .modal-content h3 { margin-bottom: 18px; color: #2c3e50; }
-        .modal-content label { display: block; margin-top: 12px; font-weight: 600; font-size: 0.92em; }
-        .modal-content input {
-            width: 100%; padding: 10px; margin-top: 4px;
-            border: 1px solid #ccc; border-radius: 6px; font-size: 1em;
-        }
-        .modal-content input:focus { border-color: #3498db; outline: none; }
-        .modal-btns { margin-top: 22px; text-align: right; }
-        .modal-btns button {
-            padding: 10px 22px; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 0.95em;
-        }
-        #btn-submit { background: #3498db; color: #fff; }
-        #btn-submit:hover { background: #2980b9; }
-        #btn-cancel { background: #bdc3c7; color: #fff; }
-        #btn-cancel:hover { background: #95a5a6; }
-
-        @media (max-width: 900px) {
-            #kanban-board { flex-direction: column; align-items: center; }
-            .kanban-column { max-width: 100%; flex: 0 0 auto; width: 100%; }
-        }
-    </style>
-</head>
-<body>
-
-<div id="app-wrapper">
-    <header>
-        <h1>🌸 日文單字看板</h1>
-        <button id="add-vocab-btn">➕ 新增單字</button>
-    </header>
-    <div id="kanban-board">
-        <div class="kanban-column" data-status="learning">
-            <h2>🔰 學習中</h2>
-            <div class="card-container"></div>
-        </div>
-        <div class="kanban-column" data-status="in_progress">
-            <h2>📖 進度檢核</h2>
-            <div class="card-container"></div>
-        </div>
-        <div class="kanban-column" data-status="mastered">
-            <h2>✅ 已掌握</h2>
-            <div class="card-container"></div>
-        </div>
-    </div>
-</div>
-
-<div class="modal" id="addModal">
-    <div class="modal-content">
-        <h3>新增日文單字</h3>
-        <label for="f-kanji">日文</label>
-        <input type="text" id="f-kanji" placeholder="例：猫">
-        <label for="f-reading">發音</label>
-        <input type="text" id="f-reading" placeholder="例：ねこ">
-        <label for="f-meaning">中文意思</label>
-        <input type="text" id="f-meaning" placeholder="例：貓">
-        <div class="modal-btns">
-            <button id="btn-cancel">取消</button>
-            <button id="btn-submit">新增</button>
-        </div>
-    </div>
-</div>
-
-<script>
-(function() {
-    'use strict';
-
-    var STORAGE_KEY = 'japanese_vocab_board';
-    var DAILY_LIMIT = 10;
-
-    var defaultVocab = [
-        { id: '1', kanji: '猫', reading: 'ねこ', meaning: '貓', status: 'learning' },
-        { id: '2', kanji: '学校', reading: 'がっこう', meaning: '學校', status: 'in_progress' },
-        { id: '3', kanji: 'ありがとう', reading: '[詞組]', meaning: '謝謝你', status: 'mastered' }
-    ];
-
-    // ── 資料 ──
-    function loadVocab() {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-            try { return JSON.parse(raw); } catch(e) {}
-        }
-        return JSON.parse(JSON.stringify(defaultVocab));
-    }
-
-    function saveVocab(list) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    }
-
-    function spendDaily() {
-        var dateKey = 'japanese_vocab_date';
-        var remainKey = 'japanese_vocab_remain';
-        var today = new Date().toDateString();
-        var saved = localStorage.getItem(dateKey);
-        var remain = parseInt(localStorage.getItem(remainKey) || DAILY_LIMIT, 10);
-        if (saved !== today) {
-            localStorage.setItem(dateKey, today);
-            localStorage.setItem(remainKey, DAILY_LIMIT - 1);
-            return true;
-        }
-        if (remain <= 0) {
-            alert('今日新增字數已達上限（' + DAILY_LIMIT + ' 個），明天再來吧！');
-            return false;
-        }
-        localStorage.setItem(remainKey, remain - 1);
-        return true;
-    }
-
-    // ── 渲染 ──
-    function renderCards() {
-        var list = loadVocab();
-        document.querySelectorAll('.card-container').forEach(function(box) {
-            box.innerHTML = '';
-        });
-        list.forEach(function(word) {
-            var el = buildCard(word);
-            var box = document.querySelector('.kanban-column[data-status="' + word.status + '"] .card-container');
-            if (box) box.appendChild(el);
-        });
-    }
-
-    function buildCard(word) {
-        var div = document.createElement('div');
-        div.className = 'vocab-card';
-        div.draggable = true;
-        div.dataset.id = word.id;
-        div.dataset.status = word.status;
-
-        div.innerHTML =
-            '<span class="kanji">' + word.kanji + '</span>' +
-            '<span class="reading">' + (word.reading || '') + '</span>' +
-            '<span class="meaning">' + word.meaning + '</span>' +
-            '<div class="actions">' +
-                '<button class="btn-review">複習</button>' +
-                '<button class="btn-delete">刪除</button>' +
-            '</div>';
-
-        div.querySelector('.btn-review').onclick = function(e) {
-            e.stopPropagation();
-            handleReview(word.id);
+        // TODO: Please fill in the 'messagingSenderId' from your Firebase Project Settings
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxG7GluZr5vDipEuSP2WsLUiBDNYfImtc",
+            authDomain: "japan-word-923b2.firebaseapp.com",
+            projectId: "japan-word-923b2",
+            storageBucket: "japan-word-923b2.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID", 
+            appId: "YOUR_APP_ID"
         };
-        div.querySelector('.btn-delete').onclick = function(e) {
-            e.stopPropagation();
-            if (confirm('刪除這個單字？')) {
-                saveVocab(loadVocab().filter(function(w) { return w.id !== word.id; }));
-                renderCards();
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+        let allWords = [];
+
+        // --- UI Elements ---
+        const appDiv = document.getElementById('app');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const wordListDiv = document.getElementById('word-list');
+        const searchInput = document.getElementById('search-input');
+        const dailyLimitMsg = document.getElementById('daily-limit-msg');
+
+        // --- Auth Logic ---
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                await loadWords();
+            } else {
+                currentUser = null;
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                wordListDiv.innerHTML = '<p class="text-gray-500 text-center">Please sign in to manage your vocabulary.</p>';
+                dailyLimitMsg.style.display = 'none';
             }
+        });
+
+        loginBtn.addEventListener('click', () => signInWithPopup(auth, provider));
+        logoutBtn.addEventListener('click', () => signOut(auth));
+
+        // --- Firestore Logic ---
+        async function loadWords() {
+            if (!currentUser) return;
+            wordListDiv.innerHTML = '<p class="text-center loading">Loading...</p>';
+            
+            const q = query(collection(db, "users", currentUser.uid, "words"), orderBy("createdAt", "desc"));
+            const snapshot = await getDocs(q);
+            allWords = [];
+            snapshot.forEach((doc) => {
+                allWords.push(doc.data()); // Note: id is doc.id, we keep it for updates
+            });
+
+            // Sort in-memory to ensure order if needed
+            // Render logic
+            renderKanban(allWords, searchInput.value);
+            checkDailyLimit();
+        }
+
+        async function checkDailyLimit() {
+            const today = new Date().toLocaleDateString(); // Simple date string for limit check
+            const q = query(collection(db, "users", currentUser.uid, "words"), where("date", "==", today));
+            const snapshot = await getDocs(q);
+            
+            dailyLimitMsg.style.display = 'block';
+            dailyLimitMsg.textContent = `Daily Progress: ${snapshot.size} / 10 words`;
+            dailyLimitMsg.className = "text-sm mb-2 text-gray-500";
+
+            if (snapshot.size >= 10) {
+                document.getElementById('add-word-form').classList.add('opacity-50', 'pointer-events-none');
+                dailyLimitMsg.className = "text-sm mb-2 text-red-500 font-bold";
+            } else {
+                document.getElementById('add-word-form').classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        async function addWord(wordData) {
+            if (!currentUser) return;
+            await addDoc(collection(db, "users", currentUser.uid, "words"), {
+                ...wordData,
+                date: new Date().toLocaleDateString(), // For daily limit counting
+                status: 'learning',
+                userId: currentUser.uid,
+                createdAt: Timestamp.now()
+            });
+            await loadWords();
+            document.getElementById('word-input').value = ''; // Reset form
+        }
+
+        async function updateStatus(id, newStatus) {
+            const docRef = doc(db, "users", currentUser.uid, "words", id);
+            await updateDoc(docRef, { status: newStatus });
+        }
+
+        async function deleteWord(id) {
+            if(confirm("Are you sure?")) {
+                await deleteDoc(doc(db, "users", currentUser.uid, "words", id));
+                await loadWords();
+            }
+        }
+
+        async function learnWord(id) {
+            await updateStatus(id, 'learned');
+        }
+
+        // --- UI Rendering ---
+        renderKanban = (words, filter = "") => {
+            const learningWords = words.filter(w => w.status === 'learning' && (w.title.toLowerCase().includes(filter.toLowerCase()) || w.reading.toLowerCase().includes(filter.toLowerCase())));
+            const learnedWords = words.filter(w => w.status === 'learned' && (w.title.toLowerCase().includes(filter.toLowerCase()) || w.reading.toLowerCase().includes(filter.toLowerCase())));
+
+            wordListDiv.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Learning Column -->
+                    <div class="bg-gray-200 p-4 rounded-lg">
+                        <h2 class="font-bold mb-2">Learning (${learningWords.length})</h2>
+                        ${learningWords.map(w => createWordCard(w, 'learning')).join('')}
+                    </div>
+                    <!-- Learned Column -->
+                    <div class="bg-green-100 p-4 rounded-lg">
+                        <h2 class="font-bold mb-2">Learned (${learnedWords.length})</h2>
+                        ${learnedWords.map(w => createWordCard(w, 'learned')).join('')}
+                    </div>
+                </div>
+            `;
         };
 
-        // 拖曳
-        div.addEventListener('dragstart', function(e) {
-            draggedCard = div;
-            div.classList.add('is-dragging');
-            e.dataTransfer.effectAllowed = 'move';
+        createWordCard = (w, status) => `
+            <div class="bg-white p-3 rounded shadow mb-2 flex justify-between items-center group">
+                <div onclick="window.speak('${w.reading.replace(/'/g, "\\'")}')" class="cursor-pointer hover:text-blue-500">
+                    <span class="text-2xl block">${w.title}</span>
+                    <span class="text-xs text-gray-500">${w.reading} - ${w.meaning}</span>
+                </div>
+                <div class="space-x-1 opacity-0 group-hover:opacity-100 transition">
+                    ${status === 'learning' ? `<button onclick="window.learnWord('${w.id}')" class="text-green-600">✅</button>` : ''}
+                    <button onclick="window.deleteWord('${w.id}')" class="text-red-500">🗑️</button>
+                </div>
+            </div>
+        `;
+
+        // Expose to window for inline onclick
+        window.learnWord = learnWord;
+        window.deleteWord = deleteWord;
+        window.speak = (text) => {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ja-JP';
+            speechSynthesis.speak(utterance);
+        };
+
+        // Search Listener
+        searchInput.addEventListener('input', (e) => renderKanban(allWords, e.target.value));
+
+        // Add Listener
+        document.getElementById('add-btn').addEventListener('click', () => {
+            const title = document.getElementById('word-input-title').value;
+            const reading = document.getElementById('word-input-reading').value;
+            const meaning = document.getElementById('word-input-meaning').value;
+            if (title && reading) {
+                addWord({ title, reading, meaning });
+            }
         });
-        div.addEventListener('dragend', function() {
-            div.classList.remove('is-dragging');
-            draggedCard = null;
-        });
 
-        return div;
-    }
+    </script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div id="app" class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Kanban Vocabulary</h1>
+            <div>
+                <button id="login-btn" class="bg-blue-600 text-white px-4 py-2 rounded">Login</button>
+                <button id="logout-btn" class="hidden bg-gray-600 text-white px-4 py-2 rounded">Logout</button>
+            </div>
+        </div>
 
-    // ── 複習 ──
-    function handleReview(id) {
-        var list = loadVocab();
-        var word = list.find(function(w) { return w.id === id; });
-        if (!word) return;
-        var map = { 'learning': 'in_progress', 'in_progress': 'mastered', 'mastered': 'learning' };
-        word.status = map[word.status] || 'learning';
-        saveVocab(list);
-        renderCards();
-    }
+        <!-- Add Word Form -->
+        <div id="add-word-form" class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Add New Word</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input id="word-input-title" class="border p-2 rounded" placeholder="Kanji (e.g. 猫)">
+                <input id="word-input-reading" class="border p-2 rounded" placeholder="Reading (e.g. ねこ)">
+                <input id="word-input-meaning" class="border p-2 rounded" placeholder="Meaning (e.g. Cat)">
+            </div>
+            <button id="add-btn" class="mt-4 bg-green-600 text-white px-4 py-2 rounded">Add to Learning</button>
+        </div>
 
-    // ── 拖曳 ──
-    var draggedCard = null;
+        <!-- Daily Limit -->
+        <div id="daily-limit-msg" class="mb-4"></div>
 
-    function onDrop(e) {
-        e.preventDefault();
-        if (!draggedCard) return;
-        var box = e.currentTarget;
-        var col = box.closest('.kanban-column');
-        col.classList.remove('drag-over');
-        var newStatus = col.dataset.status;
-        var list = loadVocab();
-        var target = list.find(function(w) { return w.id === draggedCard.dataset.id; });
-        if (target) {
-            target.status = newStatus;
-            saveVocab(list);
-        }
-        renderCards();
-    }
+        <!-- Search -->
+        <input id="search-input" class="w-full p-3 mb-6 border rounded" placeholder="Search words...">
 
-    // 初始化看板容器事件
-    document.querySelectorAll('.card-container').forEach(function(box) {
-        box.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            var col = box.closest('.kanban-column');
-            if (col) col.classList.add('drag-over');
-        });
-        box.addEventListener('dragleave', function(e) {
-            var col = box.closest('.kanban-column');
-            if (col) col.classList.remove('drag-over');
-        });
-        box.addEventListener('drop', onDrop);
-    });
-
-    // ── Modal ──
-    var modalEl = document.getElementById('addModal');
-    var btnOpen = document.getElementById('add-vocab-btn');
-    var btnSubmit = document.getElementById('btn-submit');
-    var btnCancel = document.getElementById('btn-cancel');
-
-    btnOpen.onclick = function() {
-        modalEl.style.display = 'flex';
-        document.getElementById('f-kanji').focus();
-    };
-    btnCancel.onclick = function() {
-        modalEl.style.display = 'none';
-    };
-    modalEl.onclick = function(e) {
-        if (e.target === modalEl) modalEl.style.display = 'none';
-    };
-    btnSubmit.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('[新增單字] btnSubmit clicked!');
-        
-        var kanjiEl = document.getElementById('f-kanji');
-        var readingEl = document.getElementById('f-reading');
-        var meaningEl = document.getElementById('f-meaning');
-        
-        console.log('[新增單字] kanjiEl:', kanjiEl);
-        console.log('[新增單字] f-kanji value:', kanjiEl ? kanjiEl.value : 'EL NOT FOUND');
-        console.log('[新增單字] f-meaning value:', meaningEl ? meaningEl.value : 'EL NOT FOUND');
-        
-        var kanji = kanjiEl ? kanjiEl.value.trim() : '';
-        var reading = readingEl ? readingEl.value.trim() : '';
-        var meaning = meaningEl ? meaningEl.value.trim() : '';
-        
-        console.log('[新增單字] trimmed values -> kanji:', kanji, 'meaning:', meaning);
-        
-        if (!kanji) {
-            alert('請填寫日文欄位！');
-            return;
-        }
-        if (!meaning) {
-            alert('請填寫中文意思！');
-            return;
-        }
-        
-        if (!spendDaily()) {
-            console.log('[新增單字] Daily limit reached');
-            return;
-        }
-        
-        console.log('[新增單字] Adding word to data...');
-        var list = loadVocab();
-        list.push({
-            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
-            kanji: kanji,
-            reading: reading || '（待補充）',
-            meaning: meaning,
-            status: 'learning'
-        });
-        console.log('[新增單字] list now has', list.length, 'words');
-        saveVocab(list);
-        console.log('[新增單字] saved to localStorage');
-        
-        modalEl.style.display = 'none';
-        kanjiEl.value = '';
-        readingEl.value = '';
-        meaningEl.value = '';
-        renderCards();
-        console.log('[新增單字] Done! renderCards called');
-        alert('已新增：' + kanji + ' - ' + meaning);
-    });
-    // Enter 鍵提交
-    document.getElementById('f-meaning').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') btnSubmit.click();
-    });
-
-    // ── 啟動 ──
-    renderCards();
-})();
-</script>
+        <!-- Kanban Board -->
+        <div id="word-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <p class="text-gray-500 text-center col-span-2">Please login to see your board.</p>
+        </div>
+    </div>
 </body>
 </html>
