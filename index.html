@@ -63,73 +63,64 @@
 
         /* ── 看板區 ── */
         #kanban-section { display: none; }
-        header { text-align: center; margin-bottom: 24px; }
+        header { text-align: center; margin-bottom: 10px; }
         h1 { font-weight: 300; font-size: 1.8em; color: #2c3e50; }
-        .auth-bar {
-            margin-top: 12px;
-            font-size: 0.85em;
-            color: #7f8c8d;
-        }
+        
+        .auth-bar { margin-top: 12px; font-size: 0.85em; color: #7f8c8d; }
         #sign-out-btn {
-            margin-top: 8px;
-            padding: 6px 16px;
-            font-size: 0.85em;
-            background: #95a5a6;
-            color: #fff;
-            border: none;
-            border-radius: 6px;
+            margin-top: 8px; padding: 6px 16px; font-size: 0.85em;
+            background: #95a5a6; color: #fff; border: none; border-radius: 6px;
             cursor: pointer;
         }
         #sign-out-btn:hover { background: #7f8c8d; }
 
+        /* ── 搜尋與匯入/匯出 ── */
+        .search-wrapper { max-width: 400px; margin: 15px auto 5px; }
+        #search-input {
+            width: 100%; padding: 8px 16px; border: 1px solid #ccc;
+            border-radius: 6px; font-size: 1em; text-align: center;
+        }
+        .import-export-wrapper { margin-top: 5px; text-align: center; }
+        .btn-action {
+            background: #34495e; color: #fff; padding: 6px 12px; border: none;
+            border-radius: 4px; cursor: pointer; margin: 0 4px; font-size: 0.85em;
+        }
+        .btn-action:hover { background: #2c3e50; }
+
         /* ── 看板 ── */
         #kanban-board {
-            display: flex;
-            gap: 16px;
-            min-height: 560px;
-            justify-content: center;
+            display: flex; gap: 16px; min-height: 560px;
+            justify-content: center; margin-top: 10px;
         }
         .kanban-column {
-            flex: 0 0 calc((100% - 32px) / 3);
-            max-width: 380px;
-            background: #ebecf0;
-            border-radius: 10px;
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
+            flex: 0 0 calc((100% - 32px) / 3); max-width: 380px;
+            background: #ebecf0; border-radius: 10px; padding: 14px;
+            display: flex; flex-direction: column;
             transition: background 0.2s, border 0.2s;
         }
         .kanban-column h2 {
-            font-size: 1.15em;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #dcdde1;
-            text-align: center;
-            color: #2c3e50;
-            flex-shrink: 0;
+            font-size: 1.15em; padding-bottom: 10px;
+            border-bottom: 2px solid #dcdde1; text-align: center;
+            color: #2c3e50; flex-shrink: 0;
         }
-        .card-container {
-            flex: 1;
-            min-height: 40px;
-            padding: 4px;
-            transition: background 0.2s;
-            border-radius: 6px;
-        }
+        .card-container { flex: 1; min-height: 40px; padding: 4px; transition: background 0.2s; border-radius: 6px; }
 
         /* ── 卡片 ── */
         .vocab-card {
-            background: #fff;
-            padding: 14px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            cursor: grab;
-            border-left: 5px solid #3498db;
+            background: #fff; padding: 14px; margin-bottom: 10px;
+            border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: grab; border-left: 5px solid #3498db;
             transition: box-shadow 0.15s, transform 0.15s, opacity 0.15s, background-color 0.15s, border-color 0.15s;
         }
         .vocab-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
         .vocab-card .kanji { font-size: 1.5em; display: block; color: #c0392b; margin-bottom: 4px; }
-        .vocab-card .reading,
-        .vocab-card .meaning { font-size: 0.92em; display: block; color: #555; margin-bottom: 3px; }
+        .vocab-card .reading { font-size: 0.92em; display: block; color: #2980b9; margin-bottom: 3px; }
+        .vocab-card .meaning { font-size: 0.92em; display: block; color: #555; margin-bottom: 3px; font-weight: bold; }
+        /* 階段一功能：例句樣式 */
+        .vocab-card .sentence {
+            font-size: 0.85em; display: block; color: #7f8c8d; margin-top: 4px;
+            font-style: italic; border-top: 1px dashed #eee; padding-top: 4px;
+        }
         .vocab-card .actions {
             margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;
             display: flex; gap: 6px;
@@ -143,12 +134,6 @@
         .btn-delete { background: #fdecea; color: #e74c3c; }
         .btn-delete:hover { background: #e74c3c; color: #fff; }
 
-        /* ── 狀態底色 ── */
-        .vocab-card[data-status="learning"] { border-left-color: #3498db; background: #eaf6ff !important; }
-        .vocab-card[data-status="in_progress"] { border-left-color: #f39c12; background: #fffbf0 !important; }
-        .vocab-card[data-status="mastered"] { border-left-color: #2ecc71; background: #f0fff4 !important; }
-
-        /* ── 拖曳中 ── */
         .vocab-card.is-dragging {
             background: #ffeaa7 !important;
             border-left-color: #fdcb6e !important;
@@ -165,86 +150,22 @@
             background: rgba(52,152,219,0.08);
         }
 
-        /* ── 新增按鈕 ── */
         #add-vocab-btn {
-            margin-top: 16px;
-            padding: 10px 24px;
-            font-size: 1em;
-            background: #e67e22;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+            margin-top: 16px; padding: 10px 24px; font-size: 1em;
+            background: #e67e22; color: #fff; border: none; border-radius: 8px; cursor: pointer;
         }
         #add-vocab-btn:hover { background: #d35400; }
 
-        /* ── 載入中 ── */
-        .loading-overlay {
-            text-align: center;
-            padding: 40px;
-            color: #7f8c8d;
-        }
-        .loading-spinner {
-            display: inline-block;
-            width: 40px; height: 40px;
-            border: 4px solid #e0e0e0;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* ── Modal ── */
-        .modal {
-            display: none;
-            position: fixed; z-index: 999;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.45);
-            justify-content: center; align-items: center;
-        }
-        .modal-content {
-            background: #fff; padding: 28px 32px;
-            border-radius: 10px; width: 92%; max-width: 380px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-        }
-        .modal-content h3 { margin-bottom: 18px; color: #2c3e50; }
-        .modal-content label { display: block; margin-top: 12px; font-weight: 600; font-size: 0.92em; }
-        .modal-content input {
-            width: 100%; padding: 10px; margin-top: 4px;
-            border: 1px solid #ccc; border-radius: 6px; font-size: 1em;
-        }
-        .modal-content input:focus { border-color: #3498db; outline: none; }
-        .modal-btns { margin-top: 22px; text-align: right; }
-        .modal-btns button {
-            padding: 10px 22px; border: none; border-radius: 6px;
-            cursor: pointer; font-weight: bold; margin-left: 10px; font-size: 0.95em;
-        }
-        #btn-submit { background: #3498db; color: #fff; }
-        #btn-submit:hover { background: #2980b9; }
-        #btn-cancel { background: #bdc3c7; color: #fff; }
-        #btn-cancel:hover { background: #95a5a6; }
-
-        /* ── 每日進度 ── */
         .daily-bar {
-            max-width: 380px;
-            margin: 12px auto 0;
-            font-size: 0.85em;
-            color: #7f8c8d;
-            text-align: center;
+            max-width: 380px; margin: 12px auto 0; font-size: 0.85em;
+            color: #7f8c8d; text-align: center;
         }
         .daily-bar .bar {
-            width: 100%;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 4px;
+            width: 100%; height: 8px; background: #e0e0e0;
+            border-radius: 4px; overflow: hidden; margin-top: 4px;
         }
         .daily-bar .bar-fill {
-            height: 100%;
-            background: #3498db;
-            border-radius: 4px;
-            transition: width 0.3s;
+            height: 100%; background: #3498db; border-radius: 4px; transition: width 0.3s;
         }
 
         @media (max-width: 900px) {
@@ -269,34 +190,46 @@
 
 <!-- ═══════ 看板區塊 ═══════ -->
 <div id="kanban-section">
-<div id="app-wrapper">
-    <header>
-        <h1>🌸 日文單字看板</h1>
-        <div class="auth-bar">
-            <span id="user-email"></span>
-            <button id="sign-out-btn" onclick="window.__signOut()">登出</button>
-        </div>
-        <button id="add-vocab-btn">➕ 新增單字</button>
-        <div class="daily-bar">
-            今日已學：<span id="daily-count">0</span>/<span id="daily-limit">10</span> 字
-            <div class="bar"><div class="bar-fill" id="daily-bar-fill" style="width:0%"></div></div>
-        </div>
-    </header>
-    <div id="kanban-board">
-        <div class="kanban-column" data-status="learning">
-            <h2>🔰 學習中</h2>
-            <div class="card-container"></div>
-        </div>
-        <div class="kanban-column" data-status="in_progress">
-            <h2>📖 進度檢核</h2>
-            <div class="card-container"></div>
-        </div>
-        <div class="kanban-column" data-status="mastered">
-            <h2>✅ 已掌握</h2>
-            <div class="card-container"></div>
+    <div id="app-wrapper">
+        <header>
+            <h1>🌸 日文單字看板</h1>
+            <div class="auth-bar">
+                <span id="user-email"></span>
+                <button id="sign-out-btn" onclick="window.__signOut()">登出</button>
+            </div>
+            <button id="add-vocab-btn">➕ 新增單字</button>
+            
+            <!-- 階段一功能：搜尋 -->
+            <div class="search-wrapper">
+                <input type="text" id="search-input" placeholder="🔍 搜尋日文、發音或中文...">
+            </div>
+            <!-- 階段一功能：匯入/匯出 -->
+            <div class="import-export-wrapper">
+                <button id="export-btn" class="btn-action">📤 匯出資料 (JSON)</button>
+                <button id="import-btn" class="btn-action">📥 匯入資料</button>
+                <input type="file" id="import-f" accept=".json" style="display:none">
+            </div>
+
+            <div class="daily-bar">
+                今日已學：<span id="daily-count">0</span>/<span id="daily-limit">10</span> 字
+                <div class="bar"><div class="bar-fill" id="daily-bar-fill" style="width:0%"></div></div>
+            </div>
+        </header>
+        <div id="kanban-board">
+            <div class="kanban-column" data-status="learning">
+                <h2>🔰 學習中</h2>
+                <div class="card-container"></div>
+            </div>
+            <div class="kanban-column" data-status="in_progress">
+                <h2>📖 進度檢核</h2>
+                <div class="card-container"></div>
+            </div>
+            <div class="kanban-column" data-status="mastered">
+                <h2>✅ 已掌握</h2>
+                <div class="card-container"></div>
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <!-- ═══════ 新增單字 Modal ═══════ -->
@@ -309,6 +242,9 @@
         <input type="text" id="f-reading" placeholder="例：ねこ">
         <label for="f-meaning" style="margin-top:12px;">中文意思</label>
         <input type="text" id="f-meaning" placeholder="例：貓">
+        <!-- 階段一功能：例句 -->
+        <label for="f-sentence" style="margin-top:12px;">例句 (選填)</label>
+        <textarea id="f-sentence" placeholder="例：猫が好きです。"></textarea>
         <div class="modal-btns">
             <button id="btn-cancel">取消</button>
             <button id="btn-submit">新增</button>
@@ -325,7 +261,6 @@
 (function() {
     'use strict';
 
-    // ── Firebase 設定 ──
     var firebaseConfig = {
         apiKey: "AIzaSyBxG7GluZr5vDipEuSP2WsLUiBDNYfImtc",
         authDomain: "japan-word-923b2.firebaseapp.com",
@@ -339,12 +274,15 @@
     var auth = firebase.auth();
     var db = firebase.firestore();
 
-    var STORAGE_KEY = 'japanese_vocab_board';
     var DAILY_LIMIT = 10;
     var currentUser = null;
     var isSignupMode = false;
+    var todayStr;
+    
+    // 階段一功能：用來暫存同步過來的資料，方便搜尋
+    var allSyncedWords = [];
+    var vocabListener = null;
 
-    // ── 登入/註冊 ──
     function showAuthError(msg) {
         document.getElementById('auth-error').textContent = msg;
         document.getElementById('auth-error').style.display = 'block';
@@ -357,84 +295,45 @@
         isSignupMode = !isSignupMode;
         var btn = document.getElementById('btn-confirm-auth');
         var msg = document.getElementById('auth-toggle');
-        if (isSignupMode) {
-            btn.textContent = '註冊';
-            msg.textContent = '已有帳號？立即登入';
-        } else {
-            btn.textContent = '登入';
-            msg.textContent = '還沒有帳號？立即註冊';
-        }
+        if (isSignupMode) { btn.textContent = '註冊'; msg.textContent = '已有帳號？立即登入'; }
+        else { btn.textContent = '登入'; msg.textContent = '還沒有帳號？立即註冊'; }
         hideAuthError();
     };
 
-    window.__signOut = function() {
-        auth.signOut().then(function() {
-            showKanban(false);
-        });
-    };
+    window.__signOut = function() { auth.signOut().then(function() { showKanban(false); }); };
 
     function confirmAuth() {
         var email = document.getElementById('auth-email').value.trim();
         var password = document.getElementById('auth-password').value.trim();
         hideAuthError();
-
-        if (!email || !password) {
-            showAuthError('請填寫郵件與密碼');
-            return;
-        }
-        if (password.length < 6) {
-            showAuthError('密碼至少 6 個字元');
-            return;
-        }
+        if (!email || !password) { showAuthError('請填寫郵件與密碼'); return; }
+        if (password.length < 6) { showAuthError('密碼至少 6 個字元'); return; }
 
         var btn = document.getElementById('btn-confirm-auth');
-        btn.textContent = '處理中...';
-        btn.disabled = true;
+        btn.textContent = '處理中...'; btn.disabled = true;
 
         if (isSignupMode) {
             auth.createUserWithEmailAndPassword(email, password)
                 .then(function(result) {
-                    // 寫入使用者資料
                     return db.collection('users').doc(result.user.uid).set({
-                        email: email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        email: email, createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     }, { merge: true });
                 })
-                .then(function() {
-                    showKanban(true);
-                })
-                .catch(function(err) {
-                    showAuthError(err.message);
-                    btn.textContent = isSignupMode ? '註冊' : '登入';
-                    btn.disabled = false;
-                });
+                .then(function() { showKanban(true); })
+                .catch(function(err) { showAuthError(err.message); btn.textContent='註冊'; btn.disabled=false; });
         } else {
             auth.signInWithEmailAndPassword(email, password)
-                .then(function() {
-                    showKanban(true);
-                })
-                .catch(function(err) {
-                    showAuthError('登入失敗：' + err.message);
-                    btn.textContent = '登入';
-                    btn.disabled = false;
-                });
+                .then(function() { showKanban(true); })
+                .catch(function(err) { showAuthError('登入失敗：' + err.message); btn.textContent='登入'; btn.disabled=false; });
         }
     }
-
     document.getElementById('btn-confirm-auth').addEventListener('click', confirmAuth);
-
-    // ── 登入狀態監聽 ──
+    
     auth.onAuthStateChanged(function(user) {
-        if (user) {
-            currentUser = user;
-            showKanban(true);
-        } else {
-            currentUser = null;
-            showKanban(false);
-        }
+        if (user) { currentUser = user; showKanban(true); }
+        else { currentUser = null; showKanban(false); }
     });
 
-    // ── 顯示看板/登入畫面 ──
     function showKanban(show) {
         document.getElementById('auth-section').style.display = show ? 'none' : 'block';
         document.getElementById('kanban-section').style.display = show ? 'block' : 'none';
@@ -444,170 +343,191 @@
         }
     }
 
-    // ── Firestore ──
-    var vocabCollection = null; // 使用者單字集合引用
-    var dailyDoc = null;        // 使用者每日記錄引用
-    var vocabListener = null;   // 即時監聽器
+    var vocabCollection = null;
+    var dailyDoc = null;
 
     function initFirestore() {
         var uid = currentUser.uid;
-
-        // 取得使用者單字集合
         vocabCollection = db.collection('users').doc(uid).collection('vocab');
-
-        // 取得使用者每日記錄
         todayStr = new Date().toISOString().split('T')[0];
         dailyDoc = db.collection('users').doc(uid).collection('daily').doc(todayStr);
-
-        // 讀取並即時同步所有卡片
         loadAndSyncCards();
-
-        // 讀取今日學習進度
         loadDailyLimit();
     }
 
-    // ── 即時同步卡片 ──
+    // ── 階段一功能：即時同步 + 搜尋邏輯 ──
     function loadAndSyncCards() {
-        // 清除舊監聽
         if (vocabListener) vocabListener();
-
+        
+        var searchText = document.getElementById('search-input').value.trim().toLowerCase();
         var cards = document.querySelectorAll('.card-container');
-        cards.forEach(function(box) { box.innerHTML = ''; box.innerHTML = '<div class="loading-overlay"><div class="loading-spinner"></div><p>同步中...</p></div>'; });
+        cards.forEach(function(box) { box.innerHTML = '<div class="loading-overlay"><div class="loading-spinner"></div><p>同步中...</p></div>'; });
 
-        vocabCollection
-            .onSnapshot(function(snapshot) {
-                cards.forEach(function(box) { box.innerHTML = ''; });
-
-                snapshot.forEach(function(doc) {
-                    var word = doc.data();
-                    word.id = doc.id;
-                    renderCard(word);
-                });
-
-                // 清空載入畫面
-                cards.forEach(function(box) {
-                    if (!box.children.length) box.innerHTML = '';
-                });
-            }, function(err) {
-                console.error('Firestore 監聽錯誤:', err);
-                showAuthError('同步失敗：' + err.message);
+        vocabCollection.onSnapshot(function(snapshot) {
+            allSyncedWords = [];
+            snapshot.forEach(function(doc) {
+                var word = doc.data();
+                word.id = doc.id;
+                allSyncedWords.push(word);
             });
+            renderCards(searchText);
+        }, function(err) {
+            showAuthError('同步失敗：' + err.message);
+        });
     }
 
-    // ── 渲染單張卡片（供同步使用） ──
-    function renderCard(word) {
-        var box = document.querySelector('.kanban-column[data-status="' + word.status + '"] .card-container');
-        if (!box) return;
+    // 搜尋監聽
+    document.getElementById('search-input').addEventListener('input', function() {
+        if (allSyncedWords.length === 0) return;
+        renderCards(this.value.trim().toLowerCase());
+    });
 
-        // 避免重複
-        if (box.querySelector('[data-word-id="' + word.id + '"]')) return;
+    function renderCards(filterText) {
+        var filteredList = [];
+        // 階段一功能：搜尋
+        if (filterText) {
+            filteredList = allSyncedWords.filter(function(w) {
+                // 搜尋日文、發音、中文或例句
+                return w.kanji.toLowerCase().includes(filterText) || 
+                       w.reading.toLowerCase().includes(filterText) || 
+                       w.meaning.toLowerCase().includes(filterText) ||
+                       (w.sentence && w.sentence.toLowerCase().includes(filterText));
+            });
+        } else {
+            filteredList = allSyncedWords;
+        }
 
-        var div = document.createElement('div');
-        div.className = 'vocab-card';
-        div.draggable = true;
-        div.dataset.id = word.id;
-        div.dataset.wordId = word.id;
-        div.dataset.status = word.status;
+        // 清空容器並重新渲染
+        document.querySelectorAll('.card-container').forEach(function(box) { box.innerHTML = ''; });
 
-        div.innerHTML =
-            '<span class="kanji">' + word.kanji + '</span>' +
-            '<span class="reading">' + (word.reading || '') + '</span>' +
-            '<span class="meaning">' + word.meaning + '</span>' +
-            '<div class="actions">' +
-                '<button class="btn-review">複習</button>' +
-                '<button class="btn-delete">刪除</button>' +
-            '</div>';
+        filteredList.forEach(function(word) {
+            var box = document.querySelector('.kanban-column[data-status=\"' + word.status + '\"] .card-container');
+            if (!box) return;
 
-        div.querySelector('.btn-review').addEventListener('click', function(e) {
-            e.stopPropagation();
-            handleReview(word.id);
+            var div = document.createElement('div');
+            div.className = 'vocab-card';
+            div.draggable = true;
+            div.dataset.id = word.id;
+            div.dataset.wordId = word.id;
+            div.dataset.status = word.status;
+            
+            // 階段一功能：渲染例句
+            var sentenceHtml = (word.sentence && word.sentence.trim() !== '') ? '<span class="sentence">' + word.sentence + '</span>' : '';
+            
+            div.innerHTML =
+                '<span class="kanji">' + word.kanji + '</span>' +
+                '<span class="reading">' + (word.reading || '') + '</span>' +
+                '<span class="meaning">' + word.meaning + '</span>' +
+                sentenceHtml +
+                '<div class="actions">' +
+                    '<button class="btn-review">複習</button>' +
+                    '<button class="btn-delete">刪除</button>' +
+                '</div>';
+            
+            div.querySelector('.btn-review').addEventListener('click', function(e) {
+                e.stopPropagation();
+                handleReview(word.id);
+            });
+            div.querySelector('.btn-delete').addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (confirm('刪除這個單字？')) { deleteWord(word.id); }
+            });
+            
+            div.addEventListener('dragstart', function(e) {
+                draggedCard = div;
+                div.classList.add('is-dragging');
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            div.addEventListener('dragend', function() {
+                div.classList.remove('is-dragging');
+                draggedCard = null;
+            });
+
+            box.appendChild(div);
         });
-        div.querySelector('.btn-delete').addEventListener('click', function(e) {
-            e.stopPropagation();
-            if (confirm('刪除這個單字？')) {
-                deleteWord(word.id);
+    }
+
+    // ── 階段一功能：匯出 ──
+    function exportData() {
+        if (allSyncedWords.length === 0) { alert('目前沒有資料可以匯出'); return; }
+        var dataStr = JSON.stringify(allSyncedWords, null, 2);
+        var blob = new Blob([dataStr], {type: "application/json"});
+        var downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href",     URL.createObjectURL(blob));
+        downloadAnchorNode.setAttribute("download", "vocab-export-" + new Date().toISOString().slice(0,10) + ".json");
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+    }
+    document.getElementById('export-btn').addEventListener('click', exportData);
+
+    // ── 階段一功能：匯入 ──
+    document.getElementById('import-btn').addEventListener('click', function() { document.getElementById('import-f').click(); });
+    document.getElementById('import-f').addEventListener('change', function(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var imported = JSON.parse(e.target.result);
+                if (!Array.isArray(imported)) throw new Error("檔案格式不正確");
+                
+                var batch = db.batch();
+                let count = 0;
+                imported.forEach(word => {
+                    var docRef = vocabCollection.doc();
+                    batch.set(docRef, {
+                        kanji: word.kanji || '',
+                        reading: word.reading || '',
+                        meaning: word.meaning || '',
+                        sentence: word.sentence || '',
+                        status: 'learning',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    count++;
+                    // Firestore 批次限制 500 筆
+                    if (count % 500 === 0) {
+                        batch.commit().then(function() { updateDaily(count); });
+                        batch = db.batch(); 
+                    }
+                });
+                if (count > 0) batch.commit().then(function() { updateDaily(count); });
+                alert('成功匯入 ' + count + ' 個單字！\n請重新整理頁面以同步最新狀態。');
+            } catch (err) {
+                alert('匯入失敗：' + err.message);
             }
-        });
+        };
+        reader.readAsText(file);
+        this.value = ''; 
+    });
 
-        div.addEventListener('dragstart', function(e) {
-            draggedCard = div;
-            div.classList.add('is-dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-        div.addEventListener('dragend', function() {
-            div.classList.remove('is-dragging');
-            draggedCard = null;
-        });
-
-        box.appendChild(div);
+    function updateDaily(n) {
+        dailyDoc.set({ count: firebase.firestore.FieldValue.increment(n) }, { merge: true });
     }
 
-    // ── 新增單字（寫入 Firestore） ──
-    function addWord(kanji, reading, meaning) {
-        todayStr = new Date().toISOString().split('T')[0];
-
-        // 寫入單字
-        vocabCollection.add({
-            kanji: kanji,
-            reading: reading,
-            meaning: meaning,
-            status: 'learning',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(function() {
-            // 同時更新計數 (merge: true 確保若無此日記錄也會建立)
-            dailyDoc.set({ count: firebase.firestore.FieldValue.increment(1) }, { merge: true });
-            console.log('單字已同步至 Firestore');
-        }).catch(function(err) {
-            showAuthError('新增失敗：' + err.message);
-        });
-    }
-
-    // ── 刪除單字 ──
-    function deleteWord(id) {
-        vocabCollection.doc(id).delete().then(function() {
-            console.log('已刪除');
-        }).catch(function(err) {
-            showAuthError('刪除失敗：' + err.message);
-        });
-    }
-
-    // ── 複習（更新狀態） ──
+    // ── 複習/刪除 ──
     function handleReview(id) {
         var map = { 'learning': 'in_progress', 'in_progress': 'mastered', 'mastered': 'learning' };
         vocabCollection.doc(id).get().then(function(doc) {
             if (!doc.exists) return;
-            var word = doc.data();
-            var newStatus = map[word.status] || 'learning';
+            var newStatus = map[doc.data().status] || 'learning';
             return vocabCollection.doc(id).update({ status: newStatus });
-        }).catch(function(err) {
-            showAuthError('更新狀態失敗：' + err.message);
         });
     }
-
-    // ── 使用者資料 ──
-    var userData = null;
-    var todayStr; // 用於即時同步
+    function deleteWord(id) {
+        vocabCollection.doc(id).delete();
+    }
 
     // ── 拖曳 ──
     var draggedCard = null;
-
     document.addEventListener('dragover', function(e) {
         var box = e.target.closest('.card-container');
-        if (box) {
-            e.preventDefault();
-            var col = box.closest('.kanban-column');
-            if (col) col.classList.add('drag-over');
-        }
+        if (box) { e.preventDefault(); var col = box.closest('.kanban-column'); if(col) col.classList.add('drag-over'); }
     });
-
     document.addEventListener('dragleave', function(e) {
         var box = e.target.closest('.card-container');
-        if (box) {
-            var col = box.closest('.kanban-column');
-            if (col) col.classList.remove('drag-over');
-        }
+        if (box) { var col = box.closest('.kanban-column'); if(col) col.classList.remove('drag-over'); }
     });
-
     document.addEventListener('drop', function(e) {
         e.preventDefault();
         if (!draggedCard) return;
@@ -615,11 +535,15 @@
         if (!box) return;
         var col = box.closest('.kanban-column');
         if (col) col.classList.remove('drag-over');
-        var newStatus = col.dataset.status;
-        var docId = draggedCard.dataset.id;
-        vocabCollection.doc(docId).update({ status: newStatus }).catch(function(err) {
-            showAuthError('拖曳更新失敗：' + err.message);
-        });
+        vocabCollection.doc(draggedCard.dataset.id).update({ status: col.dataset.status });
+    });
+    document.addEventListener('dragstart', function(e) {
+        draggedCard = e.target.closest('.vocab-card');
+        if (draggedCard) draggedCard.classList.add('is-dragging');
+    });
+    document.addEventListener('dragend', function(e) {
+        if (draggedCard) draggedCard.classList.remove('is-dragging');
+        draggedCard = null;
     });
 
     // ── 每日進度 ──
@@ -633,44 +557,38 @@
             });
     }
 
-    // Modal 相關
+    // ── Modal ──
     var modalEl = document.getElementById('addModal');
-    var btnOpen = document.getElementById('add-vocab-btn');
-    var btnSubmit = document.getElementById('btn-submit');
-    var btnCancel = document.getElementById('btn-cancel');
-
-    btnOpen.addEventListener('click', function() {
+    document.getElementById('add-vocab-btn').addEventListener('click', function() {
         if (!currentUser) { alert('請先登入'); return; }
-        modalEl.style.display = 'flex';
-        document.getElementById('f-kanji').focus();
+        modalEl.style.display = 'flex'; document.getElementById('f-kanji').focus();
     });
-    btnCancel.addEventListener('click', function() {
-        modalEl.style.display = 'none';
-    });
-    modalEl.addEventListener('click', function(e) {
-        if (e.target === modalEl) modalEl.style.display = 'none';
-    });
-    btnSubmit.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-
+    document.getElementById('btn-cancel').addEventListener('click', function() { modalEl.style.display = 'none'; });
+    modalEl.addEventListener('click', function(e) { if (e.target === modalEl) modalEl.style.display = 'none'; });
+    document.getElementById('btn-submit').addEventListener('click', function(e) {
+        e.preventDefault(); e.stopPropagation();
         var kanji = document.getElementById('f-kanji').value.trim();
         var reading = document.getElementById('f-reading').value.trim();
         var meaning = document.getElementById('f-meaning').value.trim();
-
+        var sentence = document.getElementById('f-sentence').value.trim();
         if (!kanji) { alert('請填寫日文欄位！'); return; }
         if (!meaning) { alert('請填寫中文意思！'); return; }
 
-        addWord(kanji, reading, meaning);
-        modalEl.style.display = 'none';
-        document.getElementById('f-kanji').value = '';
-        document.getElementById('f-reading').value = '';
-        document.getElementById('f-meaning').value = '';
+        vocabCollection.add({
+            kanji: kanji, reading: reading, meaning: meaning, sentence: sentence,
+            status: 'learning', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(function() {
+            dailyDoc.set({ count: 1 }, { merge: true }); 
+            modalEl.style.display = 'none';
+            document.getElementById('f-kanji').value = '';
+            document.getElementById('f-reading').value = '';
+            document.getElementById('f-meaning').value = '';
+            document.getElementById('f-sentence').value = '';
+        });
     });
 
-    // Enter 鍵提交
     document.getElementById('f-meaning').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') btnSubmit.click();
+        if (e.key === 'Enter') document.getElementById('btn-submit').click();
     });
 
 })();
